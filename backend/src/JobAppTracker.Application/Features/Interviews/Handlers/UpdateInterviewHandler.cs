@@ -6,6 +6,7 @@ using JobAppTracker.Application.Common.Interfaces;
 using JobAppTracker.Application.Features.Interviews.Commands;
 using JobAppTracker.Application.Features.Interviews.Dtos;
 using JobAppTracker.Application.Interfaces.Repositories;
+using JobAppTracker.Application.Mappers;
 using MediatR;
 
 namespace JobAppTracker.Application.Features.Interviews.Handlers
@@ -35,28 +36,19 @@ namespace JobAppTracker.Application.Features.Interviews.Handlers
             if (interview == null || interview.UserId != userId)
                 throw new NotFoundException("Interview not found.");
 
-            interview.InterviewDate = request.InterviewDate;
+            interview.UpdateDetails(
+                interviewType: request.InterviewType,
+                interviewDate: request.InterviewDate,
+                interviewerName: request.InterviewerName,
+                note: request.Note
+            );
 
-            interview.InterviewType = request.InterviewType;
-
-            interview.InterviewerName = request.InterviewerName;
-
-            interview.Note = request.Note;
-
-            interview.Feedback = request.Feedback;
+            if (!string.IsNullOrWhiteSpace(request.Feedback))
+                interview.AddFeedback(request.Feedback);
 
             var result = _interviewRepository.Update(interview);
             await _interviewRepository.SaveChangesAsync();
-            return new UpdateInterviewDto
-            {
-                InterviewId = result.Id,
-                JobAppId = result.JobAppId,
-                InterviewDate = result.InterviewDate,
-                InterviewType = result.InterviewType,
-                InterviewerName = result.InterviewerName,
-                Note = result.Note,
-                Feedback = result.Feedback,
-            };
+            return InterviewsMapper.ToUpdateInterviewDto(result);
         }
     }
 }

@@ -31,19 +31,19 @@ namespace JobAppTracker.Application.Features.JobApp.Handlers
             CancellationToken cancellationToken
         )
         {
-            var result = await _jobAppRepository.AddAsync(
-                new JobApplication
-                {
-                    CompanyName = request.CompanyName,
-                    Title = request.Title,
-                    AppliedAt = request.ApplicationDate,
-                    Status = (JobAppStatus)request.Status,
-                    Description = request.Description,
-                    Location = request.Location,
-                    //WorkMode = (WorkMode)request.WorkMode,
-                    UserId = _currentUserService.UserId,
-                }
+            var jobApplication = JobApplication.Create(
+                userId: _currentUserService.UserId,
+                companyName: request.CompanyName ?? throw new BadRequestException("Company name is required"),
+                title: request.Title ?? throw new BadRequestException("Title is required"),
+                appliedAt: request.ApplicationDate,
+                location: request.Location,
+                description: request.Description,
+                link: request.Link,
+                workMode: request.WorkMode ?? WorkMode.Onsite,
+                status: request.Status
             );
+
+            var result = await _jobAppRepository.AddAsync(jobApplication);
             if (result is null)
                 throw new BadRequestException("Failed to create job application");
 

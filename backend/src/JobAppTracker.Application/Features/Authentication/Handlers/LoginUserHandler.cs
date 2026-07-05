@@ -4,6 +4,7 @@ using System.Text;
 using JobAppTracker.Application.Common.Exceptions;
 using JobAppTracker.Application.Features.Authentication.Commands;
 using JobAppTracker.Application.Features.Authentication.DTOs;
+using JobAppTracker.Application.Mappers;
 using JobAppTracker.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -48,16 +49,7 @@ namespace JobAppTracker.Application.Features.Authentication.Handlers
             // get the user role
             var roles = await _usermanager.GetRolesAsync(user);
 
-            return new LoginUserDto
-            {
-                IsSuccess = true,
-                Email = user.Email,
-                UserId = user.Id,
-                Role = roles[0],
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Message = "Login Successful",
-            };
+            return AuthenticationMapper.ToLoginUserDto(user, roles);
         }
     }
 }

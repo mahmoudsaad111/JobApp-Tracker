@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using JobAppTracker.Application.Common.Exceptions;
 using JobAppTracker.Application.Common.Interfaces;
 using JobAppTracker.Application.Features.JobApp.Commands;
 using JobAppTracker.Application.Features.JobApp.Dtos;
@@ -31,8 +32,10 @@ namespace JobAppTracker.Application.Features.JobApp.Handlers
         {
             var userId = _currentUserService.UserId;
             var jobApp = await _jobAppRepository.GetByIdAsync(request.JobAppId);
+            if (jobApp == null || jobApp.UserId != userId)
+                throw new NotFoundException("Job application not found.");
 
-            jobApp.Status = request.Status;
+            jobApp.ChangeStatus(request.Status);
 
             var UpdatedJobApp = _jobAppRepository.Update(jobApp);
             await _jobAppRepository.SaveChangesAsync();

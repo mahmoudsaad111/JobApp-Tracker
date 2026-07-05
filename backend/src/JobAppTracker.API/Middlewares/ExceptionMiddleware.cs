@@ -2,6 +2,7 @@
 using System.Text.Json;
 using JobAppTracker.Application.Common.Exceptions;
 using JobAppTracker.Application.Common.Responses;
+using JobAppTracker.Domain.Common.Exceptions;
 
 namespace JobAppTracker.API.Middlewares;
 
@@ -80,6 +81,12 @@ public class ExceptionMiddleware
                     unauthorizedEx.Errors,
                     unauthorizedEx.Message
                 );
+                break;
+
+            case DomainException domainEx:
+                statusCode = HttpStatusCode.BadRequest;
+
+                response = ApiResponse<object>.FailureResult(null, domainEx.Message);
                 break;
 
             default:

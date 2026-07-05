@@ -7,6 +7,7 @@ using JobAppTracker.Application.Common.Interfaces;
 using JobAppTracker.Application.Features.JobApp.Dtos;
 using JobAppTracker.Application.Features.JobApp.Queries;
 using JobAppTracker.Application.Interfaces.Repositories;
+using JobAppTracker.Application.Mappers;
 using JobAppTracker.Domain.Entities;
 using JobAppTracker.Domain.Enums;
 using MediatR;
@@ -87,18 +88,8 @@ namespace JobAppTracker.Application.Features.JobApp.Handlers
                 result = result.Skip((request.Page - 1) * request.PageSize).Take(request.PageSize);
             }
 
-            // Map the result to the GetJobAppForUserDto and return
-            return await result
-                .Select(x => new GetJobAppForUserDto
-                {
-                    JobAppId = x.Id,
-                    CompanyName = x.CompanyName,
-                    Title = x.Title,
-                    AppliedAt = x.AppliedAt,
-                    Status = x.Status,
-                    WorkMode = x.WorkMode,
-                })
-                .ToListAsync(cancellationToken);
+            var jobApps = await result.ToListAsync(cancellationToken);
+            return JobAppMapper.ToGetJobAppForUserDto(jobApps).ToList();
         }
     }
 }

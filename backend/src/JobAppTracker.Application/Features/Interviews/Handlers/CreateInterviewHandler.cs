@@ -6,6 +6,7 @@ using JobAppTracker.Application.Common.Interfaces;
 using JobAppTracker.Application.Features.Interviews.Commands;
 using JobAppTracker.Application.Features.Interviews.Dtos;
 using JobAppTracker.Application.Interfaces.Repositories;
+using JobAppTracker.Application.Mappers;
 using JobAppTracker.Domain.Entities;
 using JobAppTracker.Domain.Enums;
 using MediatR;
@@ -41,29 +42,19 @@ namespace JobAppTracker.Application.Features.Interviews.Handlers
             if (jobApp == null || jobApp.UserId != currentUserId)
                 throw new NotFoundException("Job application not found.");
 
-            var result = await _interviewRepository.AddAsync(
-                new Interview
-                {
-                    JobAppId = Guid.Parse(request.JobAppId),
-                    InterviewType = request.InterviewType,
-                    InterviewDate = request.InterviewDate,
-                    InterviewerName = request.InterviewerName,
-                    Note = request.Note,
-                    Feedback = request.Feedback,
-                    UserId = currentUserId,
-                }
+            var interview = Interview.Create(
+                jobAppId: Guid.Parse(request.JobAppId),
+                userId: currentUserId,
+                interviewType: request.InterviewType,
+                interviewDate: request.InterviewDate,
+                interviewerName: request.InterviewerName,
+                note: request.Note,
+                feedback: request.Feedback
             );
+
+            var result = await _interviewRepository.AddAsync(interview);
             await _interviewRepository.SaveChangesAsync();
-            return new CreateInterviewDto
-            {
-                InterviewId = result.Id,
-                JobAppId = result.JobAppId,
-                InterviewDate = result.InterviewDate,
-                InterviewType = result.InterviewType,
-                InterviewerName = result.InterviewerName,
-                Note = result.Note,
-                Feedback = result.Feedback,
-            };
+            return InterviewsMapper.ToCreateInterviewDto(result);
         }
     }
 }

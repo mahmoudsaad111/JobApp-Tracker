@@ -6,6 +6,7 @@ using JobAppTracker.Application.Features.Interviews.Dtos;
 using JobAppTracker.Application.Features.Notes.Dtos;
 using JobAppTracker.Application.Features.Notes.Queries;
 using JobAppTracker.Application.Interfaces.Repositories;
+using JobAppTracker.Application.Mappers;
 using MediatR;
 
 namespace JobAppTracker.Application.Features.Notes.Handlers
@@ -31,19 +32,7 @@ namespace JobAppTracker.Application.Features.Notes.Handlers
         {
             var userId = _currentUserService.UserId;
             var notes = await _noteRepository.GetNotesForUser(userId);
-            return new GetAllNotesDto
-            {
-                Notes = notes
-                    .Select(n => new GetNoteDto
-                    {
-                        NoteId = n.Id,
-                        Content = n.Content,
-                        CreatedAt = n.CreatedAt,
-                        JobAppId = n.JobAppId,
-                        UpdatedAt = n.UpdatedAt,
-                    })
-                    .ToList(),
-            };
+            return NotesMapper.ToGetAllNotesDto(notes);
         }
     }
 }

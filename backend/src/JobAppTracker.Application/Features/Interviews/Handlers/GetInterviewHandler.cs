@@ -5,6 +5,7 @@ using JobAppTracker.Application.Common.Exceptions;
 using JobAppTracker.Application.Features.Interviews.Dtos;
 using JobAppTracker.Application.Features.Interviews.Queries;
 using JobAppTracker.Application.Interfaces.Repositories;
+using JobAppTracker.Application.Mappers;
 using MediatR;
 
 namespace JobAppTracker.Application.Features.Interviews.Handlers
@@ -28,15 +29,7 @@ namespace JobAppTracker.Application.Features.Interviews.Handlers
             {
                 throw new NotFoundException("Interview not found");
             }
-            return new GetInterviewDto
-            {
-                InterviewId = interview.Id,
-                JobAppId = interview.JobAppId,
-                InterviewDate = interview.InterviewDate,
-                InterviewType = interview.InterviewType,
-                Note = interview.Note,
-                Feedback = interview.Feedback,
-            };
+            return InterviewsMapper.ToGetInterviewDto(interview);
         }
     }
 }

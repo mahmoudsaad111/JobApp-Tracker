@@ -6,6 +6,7 @@ using JobAppTracker.Application.Common.Interfaces;
 using JobAppTracker.Application.Features.Notes.Commands;
 using JobAppTracker.Application.Features.Notes.Dtos;
 using JobAppTracker.Application.Interfaces.Repositories;
+using JobAppTracker.Application.Mappers;
 using MediatR;
 
 namespace JobAppTracker.Application.Features.Notes.Handlers
@@ -36,20 +37,11 @@ namespace JobAppTracker.Application.Features.Notes.Handlers
                 throw new NotFoundException("Note not found or access denied.");
             }
 
-            note.Content = request.Content;
-            note.UpdatedAt = DateTime.UtcNow;
+            note.UpdateContent(request.Content);
             _noteRepository.Update(note);
             await _noteRepository.SaveChangesAsync();
 
-            var updatedNote = new UpdateNoteDto
-            {
-                NoteId = request.NoteId,
-                NoteContent = request.Content,
-                CreatedAt = DateTime.UtcNow, // Replace with actual creation date
-                UpdatedAt = DateTime.UtcNow, // Replace with actual update date
-            };
-
-            return await Task.FromResult(updatedNote);
+            return NotesMapper.ToUpdateNoteDto(note);
         }
     }
 }

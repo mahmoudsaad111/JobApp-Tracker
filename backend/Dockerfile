@@ -21,4 +21,4 @@ RUN dotnet publish src/JobAppTracker.API/JobAppTracker.API.csproj -c Release --n
 FROM base AS final    
 WORKDIR /app    
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "JobAppTracker.API.dll"]  ✅
+ENTRYPOINT ["dotnet", "JobAppTracker.API.dll"]

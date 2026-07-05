@@ -5,6 +5,7 @@ using JobAppTracker.Application.Common.Interfaces;
 using JobAppTracker.Application.Features.Notes.Commands;
 using JobAppTracker.Application.Features.Notes.Dtos;
 using JobAppTracker.Application.Interfaces.Repositories;
+using JobAppTracker.Application.Mappers;
 using JobAppTracker.Domain.Entities;
 using MediatR;
 
@@ -30,26 +31,16 @@ namespace JobAppTracker.Application.Features.Notes.Handlers
         )
         {
             var userId = _currentUserService.UserId;
-            var NewNote = await _noteRepository.AddAsync(
-                new Note
-                {
-                    Content = request.Content,
-                    JobAppId = request.JobAppId,
-                    UserId = userId,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                }
+            var note = Note.Create(
+                content: request.Content,
+                userId: userId,
+                jobAppId: request.JobAppId
             );
+            var NewNote = await _noteRepository.AddAsync(note);
 
             await _noteRepository.SaveChangesAsync();
 
-            return new CreateNoteDto
-            {
-                NoteId = NewNote.Id,
-                NoteContent = NewNote.Content,
-                CreatedAt = NewNote.CreatedAt,
-                UpdatedAt = NewNote.UpdatedAt,
-            };
+            return NotesMapper.ToCreateNoteDto(NewNote);
         }
     }
 }

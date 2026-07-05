@@ -6,6 +6,7 @@ using JobAppTracker.Application.Features.Documents.Commands;
 using JobAppTracker.Application.Features.Documents.Dtos;
 using JobAppTracker.Application.Interfaces.Repositories;
 using JobAppTracker.Application.Interfaces.Services;
+using JobAppTracker.Application.Mappers;
 using JobAppTracker.Domain.Entities;
 using JobAppTracker.Domain.Enums;
 using MediatR;
@@ -56,31 +57,19 @@ namespace JobAppTracker.Application.Features.Documents.Handlers
                 _ => ContentType.Other,
             };
 
-            var document = new Document
-            {
-                UserId = userId,
-                FileName = request.File.FileName, // original name e.g. "MyCV.pdf"
-                FilePath = filePath, // "/uploads/documents/{guid}.pdf"
-                FileSize = request.File.Length,
-                Type = Enum.Parse<DocumentType>(request.Type, ignoreCase: true),
-                ContentType = contentTypeEnum,
-                CreatedAt = DateTime.UtcNow,
-            };
+            var document = Document.Create(
+                fileName: request.File.FileName, // original name e.g. "MyCV.pdf"
+                filePath: filePath, // "/uploads/documents/{guid}.pdf"
+                fileSize: request.File.Length,
+                type: docType,
+                contentType: contentTypeEnum,
+                userId: userId
+            );
 
             await _documentRepository.AddAsync(document);
             await _documentRepository.SaveChangesAsync();
 
-            return new UploadDocumentDto
-            {
-                UserId = userId,
-                FileName = document.FileName,
-                FilePath = document.FilePath,
-                FileSize = document.FileSize,
-                Type = document.Type.ToString(),
-                ContentType = document.ContentType,
-                DocumentType = document.Type,
-                CreatedAt = document.CreatedAt,
-            };
+            return DocumentsMapper.ToUploadDocumentDto(document, userId);
         }
     }
 }

@@ -8,6 +8,7 @@ using JobAppTracker.Application.Features.Authentication.DTOs;
 using JobAppTracker.Application.Interfaces.Repositories;
 using JobAppTracker.Application.Interfaces.Services.Email;
 using JobAppTracker.Application.Interfaces.Services.Frontend;
+using JobAppTracker.Application.Mappers;
 using JobAppTracker.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -41,13 +42,11 @@ namespace JobAppTracker.Application.Features.Authentication.Handlers
                 throw new BadRequestException("Email already in use");
 
             // 2. Create user
-            var user = new User
-            {
-                Email = request.Email,
-                UserName = request.Email,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-            };
+            var user = User.Create(
+                email: request.Email,
+                firstName: request.FirstName,
+                lastName: request.LastName
+            );
 
             // 3. Save to DB
            var result = await _usermanager.CreateAsync(user, request.Password);
@@ -84,7 +83,7 @@ namespace JobAppTracker.Application.Features.Authentication.Handlers
         }
 
             // 5. Return result
-            return new RegisterResultDto { Email = user.Email };
+            return AuthenticationMapper.ToRegisterResultDto(user);
         }
     }
 }

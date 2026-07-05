@@ -122,6 +122,7 @@ namespace JobAppTracker.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CompanyName")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
@@ -143,6 +144,7 @@ namespace JobAppTracker.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
