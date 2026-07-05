@@ -101,11 +101,41 @@ jobs:
             throw 'Missing deployment secrets. Add WEB_DEPLOY_PUBLISH_URL, WEB_DEPLOY_MSDEPLOY_SITE, WEB_DEPLOY_USERNAME, and WEB_DEPLOY_PASSWORD to GitHub Secrets.'
           }
 
-          & $msdeploy `
-            -verb:sync `
-            -source:contentPath="$PWD\publish" `
-            -dest:contentPath="$env:MSDEPLOY_SITE",computerName="https://$env:PUBLISH_URL/msdeploy.axd?site=$env:MSDEPLOY_SITE",userName="$env:USERNAME",password="$env:PASSWORD",authtype="Basic" `
-            -allowUntrusted `
-            -disableLink:AppPoolExtension `
-            -disableLink:ContentExtension `
-            -enableRule:DoNotDeleteRule
+          # Splatting a single pre-quoted string still gets mangled by PowerShell's
+          # native-argument marshalling once the value itself contains embedded
+          # double quotes. The only fully reliable fix is to bypass PowerShell's
+          # argument parsing entirely and hand each argument straight to the
+          # process via .NET's ProcessStartInfo.ArgumentList, which passes every
+          # element through to the child process exactly as-is, unquoted and
+          # unmodified by the shell.
+          $destValue = "contentPath=$env:MSDEPLOY_SITE,computerName=https://$env:PUBLISH_URL/msdeploy.axd?site=$env:MSDEPLOY_SITE,userName=$env:USERNAME,password=$env:PASSWORD,authtype=Basic"
+
+          # $msdeploy is a CommandInfo object when found via Get-Command, but a
+          # plain path string when found via the candidates fallback above.
+          # Normalize to a path string either way before using it as FileName.
+          $msdeployPath = if ($msdeploy -is [System.Management.Automation.CommandInfo]) { $msdeploy.Source } else { $msdeploy }
+
+          $psi = New-Object System.Diagnostics.ProcessStartInfo
+          $psi.FileName = $msdeployPath
+          $psi.ArgumentList.Add('-verb:sync')
+          $psi.ArgumentList.Add("-source:contentPath=$PWD\publish")
+          $psi.ArgumentList.Add("-dest:$destValue")
+          $psi.ArgumentList.Add('-allowUntrusted')
+          $psi.ArgumentList.Add('-disableLink:AppPoolExtension')
+          $psi.ArgumentList.Add('-disableLink:ContentExtension')
+          $psi.ArgumentList.Add('-enableRule:DoNotDeleteRule')
+          $psi.UseShellExecute = $false
+          $psi.RedirectStandardOutput = $true
+          $psi.RedirectStandardError = $true
+
+          $process = [System.Diagnostics.Process]::Start($psi)
+          $stdout = $process.StandardOutput.ReadToEnd()
+          $stderr = $process.StandardError.ReadToEnd()
+          $process.WaitForExit()
+
+          Write-Host $stdout
+          if ($stderr) { Write-Host $stderr }
+
+          if ($process.ExitCode -ne 0) {
+            throw "msdeploy failed with exit code $($process.ExitCode)"
+          }
