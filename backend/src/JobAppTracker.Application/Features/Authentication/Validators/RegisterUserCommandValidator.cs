@@ -7,9 +7,6 @@ namespace JobAppTracker.Application.Features.Authentication.Validators
     {
         public RegisterUserCommandValidator()
         {
-            RuleFor(x => x.UserName)
-                .NotEmpty().WithMessage("Username is required")
-                .MaximumLength(100).WithMessage("Username is too long (max 100 chars)");
 
             RuleFor(x => x.Password)
                 .NotEmpty().WithMessage("Password is required")
