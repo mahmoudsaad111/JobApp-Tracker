@@ -8,7 +8,7 @@ on:
 
 concurrency:
   group: deploy-monster
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
@@ -55,21 +55,9 @@ jobs:
             -o ./publish `
             --nologo
 
-      - name: Apply EF Core migrations
-        env:
-          SQLSERVER_CONNECTION_STRING: ${{ secrets.SQLSERVER_CONNECTION_STRING }}
-        shell: pwsh
-        run: |
-          if ([string]::IsNullOrWhiteSpace($env:SQLSERVER_CONNECTION_STRING)) {
-            Write-Host 'SQLSERVER_CONNECTION_STRING not set. Skipping EF Core migrations.'
-            exit 0
-          }
-
-          dotnet tool install --global dotnet-ef
-          dotnet ef database update `
-            --project backend/src/JobAppTracker.Infrastructure/JobAppTracker.Infrastructure.csproj `
-            --startup-project backend/src/JobAppTracker.API/JobAppTracker.API.csproj `
-            --connection "$env:SQLSERVER_CONNECTION_STRING"
+      # No separate EF Core migration step here — Program.cs already calls
+      # dbContext.Database.Migrate() on startup, so migrations apply
+      # automatically the moment the deployed app connects to the database.
 
       - name: Prepare static frontend files
         shell: pwsh
@@ -78,6 +66,8 @@ jobs:
           if (Test-Path $frontendDist) {
             New-Item -ItemType Directory -Path ./publish/wwwroot/client -Force | Out-Null
             Copy-Item -Path (Join-Path $frontendDist '*') -Destination ./publish/wwwroot/client -Recurse -Force
+          } else {
+            Write-Host "::warning::Frontend dist path '$frontendDist' not found — check your Angular project name in angular.json matches this path, or static files won't be deployed."
           }
 
       - name: Install Web Deploy
