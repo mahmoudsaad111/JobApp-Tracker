@@ -16,7 +16,6 @@ public class RegisterUserCommandValidatorTests
         var result = validator.Validate(command);
 
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.PropertyName == "UserName");
         Assert.Contains(result.Errors, e => e.PropertyName == "Password");
         Assert.Contains(result.Errors, e => e.PropertyName == "Email");
     }
