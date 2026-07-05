@@ -61,7 +61,7 @@ app.UseAuthorization();
 
 app.UseMiddleware<ExceptionMiddleware>();
 app.MapControllers();
-app.MapFallbackToFile("client/index.html");  // any non-API route falls back to Angular's index.html
+app.MapFallbackToFile("index.html");
 
 using (var scope = app.Services.CreateScope())
 {
