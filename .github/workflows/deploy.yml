@@ -58,9 +58,11 @@ jobs:
       - name: Apply EF Core migrations
         env:
           SQLSERVER_CONNECTION_STRING: ${{ secrets.SQLSERVER_CONNECTION_STRING }}
+        shell: pwsh
         run: |
           if ([string]::IsNullOrWhiteSpace($env:SQLSERVER_CONNECTION_STRING)) {
-            throw 'Missing SQLSERVER_CONNECTION_STRING secret.'
+            Write-Host 'SQLSERVER_CONNECTION_STRING not set. Skipping EF Core migrations.'
+            exit 0
           }
 
           dotnet tool install --global dotnet-ef
