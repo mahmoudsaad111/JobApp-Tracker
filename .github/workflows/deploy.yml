@@ -64,8 +64,8 @@ jobs:
         run: |
           $frontendDist = Join-Path $PWD 'frontend/dist/job-tracker/browser'
           if (Test-Path $frontendDist) {
-            New-Item -ItemType Directory -Path ./publish/wwwroot/client -Force | Out-Null
-            Copy-Item -Path (Join-Path $frontendDist '*') -Destination ./publish/wwwroot/client -Recurse -Force
+            New-Item -ItemType Directory -Path ./publish/wwwroot -Force | Out-Null
+            Copy-Item -Path (Join-Path $frontendDist '*') -Destination ./publish/wwwroot -Recurse -Force
           } else {
             Write-Host "::warning::Frontend dist path '$frontendDist' not found — check your Angular project name in angular.json matches this path, or static files won't be deployed."
           }
@@ -124,6 +124,11 @@ jobs:
           $psi.ArgumentList.Add('-disableLink:AppPoolExtension')
           $psi.ArgumentList.Add('-disableLink:ContentExtension')
           $psi.ArgumentList.Add('-enableRule:DoNotDeleteRule')
+          # AppOffline drops an app_offline.htm marker before syncing, which
+          # makes IIS gracefully unload the running .NET process and release
+          # its lock on JobAppTracker.API.dll (fixes ERROR_FILE_IN_USE), then
+          # removes the marker automatically once the sync completes.
+          $psi.ArgumentList.Add('-enableRule:AppOffline')
           $psi.UseShellExecute = $false
           $psi.RedirectStandardOutput = $true
           $psi.RedirectStandardError = $true
