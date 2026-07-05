@@ -18,10 +18,6 @@ namespace JobAppTracker.Infrastructure.Services.Email
 
         public async Task SendEmailAsync(string to, string subject, string body)
         {
-            Console.WriteLine($"EMAIL ATTEMPT: Connecting to {_emailSettings.SmtpServer}:{_emailSettings.Port}");
-            Console.WriteLine($"EMAIL FROM: {_emailSettings.SenderEmail}");
-            Console.WriteLine($"EMAIL TO: {to}");
-
             var email = new MimeMessage();
             email.From.Add(new MailboxAddress(_emailSettings.SenderName, _emailSettings.SenderEmail));
             email.To.Add(MailboxAddress.Parse(to));

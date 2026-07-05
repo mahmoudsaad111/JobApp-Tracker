@@ -20,13 +20,13 @@ services:
         condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__SQLServer=Server=mssql,1433;Database=JobAppTracker;User Id=sa;Password=MahmoudSaad@123;TrustServerCertificate=True
+      - ConnectionStrings__SQLServer=Server=mssql,1433;Database=JobAppTracker;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True
       # ── Email ──────────────────────────────────────────────
       - Email__SmtpServer=smtp.gmail.com
       - Email__Port=587
       - Email__SenderName=JobAppTracker
       - Email__SenderEmail=mahmoudsaad87871@gmail.com
-      - Email__Password=eaxk zlcn xiqd yjmx
+      - Email__Password=${EMAIL_PASSWORD}
       # ── Frontend ───────────────────────────────────────────
       - Frontend__BaseUrl=http://localhost:4200
     volumes:
