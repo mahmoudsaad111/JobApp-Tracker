@@ -101,11 +101,23 @@ jobs:
             throw 'Missing deployment secrets. Add WEB_DEPLOY_PUBLISH_URL, WEB_DEPLOY_MSDEPLOY_SITE, WEB_DEPLOY_USERNAME, and WEB_DEPLOY_PASSWORD to GitHub Secrets.'
           }
 
-          & $msdeploy `
-            -verb:sync `
-            -source:contentPath="$PWD\publish" `
-            -dest:contentPath="$env:MSDEPLOY_SITE",computerName="https://$env:PUBLISH_URL/msdeploy.axd?site=$env:MSDEPLOY_SITE",userName="$env:USERNAME",password="$env:PASSWORD",authtype="Basic" `
-            -allowUntrusted `
-            -disableLink:AppPoolExtension `
-            -disableLink:ContentExtension `
-            -enableRule:DoNotDeleteRule
+          # Build the -dest argument as a single quoted string via -f formatting,
+          # then pass every msdeploy argument as a separate array element and
+          # splat it (@msdeployArgs). Splatting avoids PowerShell wrapping the
+          # whole compound argument in an extra outer quote before handing it
+          # to the native msdeploy.exe process, which is what caused
+          # "Unrecognized argument ... All arguments must begin with '-'".
+          $destArg = '-dest:contentPath="{0}",computerName="https://{1}/msdeploy.axd?site={0}",userName="{2}",password="{3}",authtype="Basic"' -f `
+            $env:MSDEPLOY_SITE, $env:PUBLISH_URL, $env:USERNAME, $env:PASSWORD
+
+          $msdeployArgs = @(
+            '-verb:sync',
+            "-source:contentPath=$PWD\publish",
+            $destArg,
+            '-allowUntrusted',
+            '-disableLink:AppPoolExtension',
+            '-disableLink:ContentExtension',
+            '-enableRule:DoNotDeleteRule'
+          )
+
+          & $msdeploy @msdeployArgs
