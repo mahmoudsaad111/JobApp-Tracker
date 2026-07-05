@@ -145,27 +145,6 @@ backend/
 - [Node.js](https://nodejs.org/)
 - SQL Server
 
-### Deployment
-
-This repository includes a GitHub Actions workflow for deploying the backend and frontend to Monster hosting using Web Deploy.
-
-#### Required GitHub secrets
-Add these in GitHub repository settings -> Secrets and variables -> Actions:
-- WEB_DEPLOY_PUBLISH_URL
-- WEB_DEPLOY_MSDEPLOY_SITE
-- WEB_DEPLOY_USERNAME
-- WEB_DEPLOY_PASSWORD
-
-#### Values from your publish profile
-Use the values from your publish profile:
-- Publish URL: site77964.siteasp.net
-- MSDeploy site: site77964
-- Username: site77964
-- Password: stored in GitHub Secrets only
-
-Deployment runs automatically on pushes to main, or you can trigger it manually from the Actions tab.
-
-
 ### Installation
 
 ```bash
