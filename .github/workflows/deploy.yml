@@ -1,0 +1,119 @@
+name: Deploy to Monster Hosting
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-monster
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: windows-latest
+
+    env:
+      DOTNET_VERSION: '10.0.x'
+      NODE_VERSION: '20'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Restore .NET dependencies
+        run: dotnet restore backend/JobAppTracker.sln
+
+      - name: Run backend tests
+        run: dotnet test backend/JobAppTracker.sln --configuration Release --no-restore --verbosity minimal
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build:prod
+
+      - name: Publish backend application
+        run: |
+          dotnet publish backend/src/JobAppTracker.API/JobAppTracker.API.csproj `
+            -c Release `
+            -o ./publish `
+            --nologo
+
+      - name: Apply EF Core migrations
+        env:
+          SQLSERVER_CONNECTION_STRING: ${{ secrets.SQLSERVER_CONNECTION_STRING }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:SQLSERVER_CONNECTION_STRING)) {
+            throw 'Missing SQLSERVER_CONNECTION_STRING secret.'
+          }
+
+          dotnet tool install --global dotnet-ef
+          dotnet ef database update `
+            --project backend/src/JobAppTracker.Infrastructure/JobAppTracker.Infrastructure.csproj `
+            --startup-project backend/src/JobAppTracker.API/JobAppTracker.API.csproj `
+            --connection "$env:SQLSERVER_CONNECTION_STRING"
+
+      - name: Prepare static frontend files
+        shell: pwsh
+        run: |
+          $frontendDist = Join-Path $PWD 'frontend/dist/job-tracker/browser'
+          if (Test-Path $frontendDist) {
+            New-Item -ItemType Directory -Path ./publish/wwwroot/client -Force | Out-Null
+            Copy-Item -Path (Join-Path $frontendDist '*') -Destination ./publish/wwwroot/client -Recurse -Force
+          }
+
+      - name: Install Web Deploy
+        shell: pwsh
+        run: |
+          choco feature enable -n allowGlobalConfirmation
+          choco install webdeploy -y
+
+      - name: Deploy to hosting provider
+        shell: pwsh
+        env:
+          PUBLISH_URL: ${{ secrets.WEB_DEPLOY_PUBLISH_URL }}
+          MSDEPLOY_SITE: ${{ secrets.WEB_DEPLOY_MSDEPLOY_SITE }}
+          USERNAME: ${{ secrets.WEB_DEPLOY_USERNAME }}
+          PASSWORD: ${{ secrets.WEB_DEPLOY_PASSWORD }}
+        run: |
+          $msdeploy = Get-Command msdeploy.exe -ErrorAction SilentlyContinue
+          if (-not $msdeploy) {
+            $candidates = @(
+              'C:\Program Files\IIS\Microsoft Web Deploy V3\msdeploy.exe',
+              'C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe'
+            )
+            $msdeploy = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          }
+
+          if (-not $msdeploy) {
+            throw 'msdeploy.exe was not found. Use a Windows runner or install Web Deploy before deploying.'
+          }
+
+          if ([string]::IsNullOrWhiteSpace($env:PUBLISH_URL) -or [string]::IsNullOrWhiteSpace($env:MSDEPLOY_SITE) -or [string]::IsNullOrWhiteSpace($env:USERNAME) -or [string]::IsNullOrWhiteSpace($env:PASSWORD)) {
+            throw 'Missing deployment secrets. Add WEB_DEPLOY_PUBLISH_URL, WEB_DEPLOY_MSDEPLOY_SITE, WEB_DEPLOY_USERNAME, and WEB_DEPLOY_PASSWORD to GitHub Secrets.'
+          }
+
+          & $msdeploy `
+            -verb:sync `
+            -source:contentPath="$PWD\publish" `
+            -dest:contentPath="$env:MSDEPLOY_SITE",computerName="https://$env:PUBLISH_URL/msdeploy.axd?site=$env:MSDEPLOY_SITE",userName="$env:USERNAME",password="$env:PASSWORD",authtype="Basic" `
+            -allowUntrusted `
+            -disableLink:AppPoolExtension `
+            -disableLink:ContentExtension `
+            -enableRule:DoNotDeleteRule
