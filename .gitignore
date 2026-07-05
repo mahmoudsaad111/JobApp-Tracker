@@ -36,3 +36,5 @@ dist/
 Thumbs.db
 *.tmp
 *.bak
+.vercel
+.env*
