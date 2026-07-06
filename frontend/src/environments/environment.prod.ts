@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
   apiUrl: '/api',
-  publicUrl: 'http://localhost:8080',
+  publicUrl: 'https://jobapptracker.tryasp.net/',
   appName: 'JobTracker'
 };
