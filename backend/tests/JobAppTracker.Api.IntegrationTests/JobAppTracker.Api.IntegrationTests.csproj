@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\JobAppTracker.Api\JobAppTracker.Api.csproj" />
+    <ProjectReference Include="..\..\src\JobAppTracker.API\JobAppTracker.API.csproj" />
     <ProjectReference Include="..\JobAppTracker.Tests.Common\JobAppTracker.Tests.Common.csproj" />
   </ItemGroup>
 
