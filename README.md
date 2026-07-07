@@ -3,16 +3,20 @@
 
 ![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-10.0-blue)
 ![Angular](https://img.shields.io/badge/Angular-21-red)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
+![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## 📌 Overview
  A full-stack web application that helps job seekers stay organized during their job search. Users can track applications, monitor statuses, record interview details, manage documents, and keep notes — all in one place. 
  
-Built with **ASP.NET Core 10** REST API and **Angular 21** frontend, secured with **Microsoft Identity** authentication, designed with **Clean Architecture**, **CQRS**, **MediatR**, and **Repository Pattern**, backed by **SQL Server** database.
+Built with **ASP.NET Core 10** REST API and **Angular 21** frontend, secured with **Microsoft Identity** authentication, designed with **Clean Architecture**, **CQRS**, **MediatR**, and rich domain models — backed by **SQL Server**, containerized with **Docker**, and deployed via a **GitHub Actions** CI/CD pipeline.
 
 > 💡 *I built this because I was scattered across multiple files and folders — 
 > saving CVs, resumes, and cover letters everywhere while trying to track 
 > applications and interviews at the same time. I wanted one clean place for all of it, so I built it.*
+
+🔗 **Live Demo:** [jobapptracker.tryasp.net](https://jobapptracker.tryasp.net/)
  
  
  ## ✨ Features 
@@ -61,13 +65,23 @@ Built with **ASP.NET Core 10** REST API and **Angular 21** frontend, secured wit
 - Clean Architecture
 - MediatR 
 - CQRS
+- FluentValidation
+- MailKit (transactional email)
 
 **Frontend:**
 - Angular 21
 - TypeScript
 - Bootstrap / Tailwind CSS
 
-**Tools:**
+**Testing:**
+- xUnit (unit & integration tests)
+- Testcontainers (real SQL Server instance for integration tests)
+- FluentAssertions
+- NSubstitute
+
+**DevOps & Tools:**
+- Docker & Docker Compose
+- GitHub Actions (CI/CD — automated tests + deployment)
 - Git & GitHub
 - Swagger (API Documentation)
 - Visual Studio / VS Code
@@ -82,15 +96,20 @@ The backend is built following
 
 ```
 backend/
-├── API/                    # Controllers & HTTP layer
-├── Application/            # Business logic
-│   ├── Commands/           # Write operations (CQRS)
-│   ├── Queries/            # Read operations (CQRS)
-│   ├── Handlers/           # MediatR handlers
-│   └── DTOs/               # Data Transfer Objects
-├── Domain/                 # Core entities & interfaces
-└── Infrastructure/         # EF Core, Repositories, Identity
-    └── Repositories/       # Repository pattern implementation
+├── src/
+│   ├── JobAppTracker.API/          # Controllers & HTTP layer
+│   ├── JobAppTracker.Application/  # Business logic
+│   │   ├── Commands/               # Write operations (CQRS)
+│   │   ├── Queries/                # Read operations (CQRS)
+│   │   ├── Handlers/               # MediatR handlers
+│   │   └── DTOs/                   # Data Transfer Objects
+│   ├── JobAppTracker.Domain/       # Core entities, Guard clauses & interfaces
+│   └── JobAppTracker.Infrastructure/ # EF Core, Repositories, Identity
+└── tests/
+    ├── JobAppTracker.Domain.UnitTests/
+    ├── JobAppTracker.Application.UnitTests/
+    ├── JobAppTracker.Api.IntegrationTests/  # Testcontainers + real MSSQL
+    └── JobAppTracker.Tests.Common/
 ```
 
 
@@ -101,6 +120,13 @@ backend/
 | **CQRS** | Separate read and write operations |
 | **MediatR** | Decoupled communication between layers |
 | **Repository Pattern** | Abstraction over data access layer |
+| **Guard Clauses** | Enforce domain invariants in rich domain models |
+
+## 🧪 Testing & CI/CD
+- **Unit tests** cover domain logic and application handlers.
+- **Integration tests** spin up a real SQL Server instance via **Testcontainers**, exercising the full API pipeline end-to-end rather than mocking the database.
+- A **GitHub Actions** pipeline runs the full test suite on every push/PR to `main`.
+- A separate deployment workflow builds, tests, and publishes the app to production hosting via Web Deploy on every manual trigger.
 
 ---
 
@@ -147,6 +173,15 @@ backend/
 
 ### Installation
 
+### Option A: Run with Docker Compose (recommended)
+```bash
+git clone https://github.com/mahmoudsaad111/JobAppTracker.git
+cd JobAppTracker
+docker compose up --build
+```
+
+### Option B: Run manually
+
 ```bash
 # Clone the repo
 git clone https://github.com/mahmoudsaad111/JobAppTracker.git
@@ -154,8 +189,7 @@ git clone https://github.com/mahmoudsaad111/JobAppTracker.git
 # Backend setup
 cd backend
 dotnet restore
-dotnet ef database update
-dotnet run
+dotnet run --project src/JobAppTracker.API
 
 # Frontend setup
 cd frontend
@@ -165,7 +199,15 @@ ng serve
 
 > App runs on `https://localhost:4200` by default  
 > API runs on `https://localhost:44315` by default  
-> Swagger UI available at `http://localhost:44315/swagger`
+> Swagger UI available at `http://localhost:44315/swagger`  
+> Database migrations apply automatically on startup
+
+### Running Tests
+```bash
+cd backend
+dotnet test JobAppTracker.sln
+```
+> Integration tests require Docker running locally (Testcontainers pulls a real SQL Server image).
 
 ---
 
@@ -189,21 +231,29 @@ ng serve
 ```
 JobAppTracker/
 ├── backend/
-│   ├── API/
-│   ├── Application/
-│   │   ├── Commands/
-│   │   ├── Queries/
-│   │   ├── Handlers/
-│   │   └── DTOs/
-│   ├── Domain/
-│   └── Infrastructure/
-│       └── Repositories/
+│   ├── src/
+│   │   ├── JobAppTracker.API/
+│   │   ├── JobAppTracker.Application/
+│   │   │   ├── Commands/
+│   │   │   ├── Queries/
+│   │   │   ├── Handlers/
+│   │   │   └── DTOs/
+│   │   ├── JobAppTracker.Domain/
+│   │   └── JobAppTracker.Infrastructure/
+│   └── tests/
+│       ├── JobAppTracker.Domain.UnitTests/
+│       ├── JobAppTracker.Application.UnitTests/
+│       ├── JobAppTracker.Api.IntegrationTests/
+│       └── JobAppTracker.Tests.Common/
 │
-└── frontend/
-    └── src/
-        ├── app/
-        ├── components/
-        └── services/
+├── frontend/
+│   └── src/
+│       ├── app/
+│       ├── components/
+│       └── services/
+│
+├── docker-compose.yml
+└── .github/workflows/
 ```   
 ---
 
