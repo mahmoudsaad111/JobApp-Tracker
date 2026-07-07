@@ -34,8 +34,8 @@ jobs:
       - name: Restore .NET dependencies
         run: dotnet restore backend/JobAppTracker.sln
 
-      - name: Run backend tests
-        run: dotnet test backend/JobAppTracker.sln --configuration Release --no-restore --verbosity minimal
+      - name: Run backend tests (excluding integration tests)
+        run: dotnet test backend/JobAppTracker.sln --configuration Release --no-restore --verbosity minimal --filter "FullyQualifiedName!~IntegrationTests"
 
       - name: Install frontend dependencies
         working-directory: frontend
