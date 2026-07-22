@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
@@ -11,20 +11,24 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatCardModule } from '@angular/material/card';
+import { MatTabsModule } from '@angular/material/tabs';
 import { ApplicationsService } from '../../../core/services/applications.service';
 import { InterviewsService } from '../../../core/services/interviews.service';
+import { DocumentsService, DocumentDto } from '../../../core/services/document.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { JobApplication, Interview, APPLICATION_STATUSES, INTERVIEW_TYPES } from '../../../core/models';
+import { JobApplication, Interview, APPLICATION_STATUSES, INTERVIEW_TYPES, ResumeMatchResult, CoverLetterDto } from '../../../core/models';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-application-detail',
   standalone: true,
   imports: [
-    CommonModule, RouterLink, ReactiveFormsModule,
+    CommonModule, RouterLink, ReactiveFormsModule, FormsModule,
     MatButtonModule, MatIconModule, MatSelectModule,
     MatFormFieldModule, MatInputModule, MatDatepickerModule,
-    MatProgressSpinnerModule, MatChipsModule
+    MatProgressSpinnerModule, MatChipsModule,
+    MatCardModule, MatTabsModule
   ],
   template: `
     <div class="page-container">
@@ -91,12 +95,33 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
                     <div>{{ app.appliedAt | date:'MMMM d, y' }}</div>
                   </div>
                 </div>
+                <div class="detail-row">
+                  <mat-icon>work_outline</mat-icon>
+                  <div><div class="dr-label">Job Type</div><div>{{ app.type }}</div></div>
+                </div>
+                <div class="detail-row">
+                  <mat-icon>home_work</mat-icon>
+                  <div><div class="dr-label">Work Mode</div><div>{{ app.workMode }}</div></div>
+                </div>
                 @if (app.jobLink) {
                   <div class="detail-row">
                     <mat-icon>link</mat-icon>
                     <div>
                       <div class="dr-label">Job Link</div>
                       <a [href]="app.jobLink" target="_blank" rel="noopener">View Job Posting</a>
+                    </div>
+                  </div>
+                }
+                @if (app.requiredSkills?.length) {
+                  <div class="detail-row">
+                    <mat-icon>psychology</mat-icon>
+                    <div>
+                      <div class="dr-label">Required Skills</div>
+                      <div class="skills-list">
+                        @for (skill of app.requiredSkills; track skill) {
+                          <span class="skill-chip">{{ skill }}</span>
+                        }
+                      </div>
                     </div>
                   </div>
                 }
@@ -116,13 +141,15 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
 
           <!-- Right: Interviews -->
           <div class="right-col">
-            <div class="app-card info-card">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                <h3>Interviews ({{ app.interviews?.length ?? 0 }})</h3>
-                <button mat-flat-button color="accent" (click)="showAddInterview = !showAddInterview">
-                  <mat-icon>add</mat-icon> Add
-                </button>
-              </div>
+            <mat-tab-group dynamicHeight="false">
+              <mat-tab label="Interviews">
+                <div class="app-card info-card">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                    <h3>Interviews ({{ app.interviews?.length ?? 0 }})</h3>
+                    <button mat-flat-button color="accent" (click)="showAddInterview = !showAddInterview">
+                      <mat-icon>add</mat-icon> Add
+                    </button>
+                  </div>
 
               <!-- Add interview form -->
               @if (showAddInterview) {
@@ -196,6 +223,118 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
                 </div>
               }
             </div>
+              </mat-tab>
+
+              <mat-tab label="Resume Match">
+                <div class="app-card info-card">
+                  <h3>Resume Match</h3>
+                  <p class="text-muted" style="margin-bottom:12px">Select a resume document to match against this job.</p>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Select Resume Document</mat-label>
+                    <mat-select [(ngModel)]="selectedDocumentId" [disabled]="loadingDocuments">
+                      <mat-option value="">-- select a document --</mat-option>
+                      @for (doc of documents; track doc.id) {
+                        <mat-option [value]="doc.id">{{ doc.fileName }} ({{ doc.type }})</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div style="display:flex;gap:8px">
+                    <button mat-flat-button color="primary" (click)="matchResume()" [disabled]="matchingResume || !selectedDocumentId">
+                      @if (matchingResume) { <mat-spinner diameter="18"/> }
+                      @else { <mat-icon>compare</mat-icon> Match Resume }
+                    </button>
+                  </div>
+
+                  @if (resumeMatchResult) {
+                    <div class="result-card" style="margin-top:16px">
+                      <div class="match-header">
+                        <div class="match-circle" [class.high]="resumeMatchResult.matchPercentage >= 70"
+                                                     [class.medium]="resumeMatchResult.matchPercentage >= 40 && resumeMatchResult.matchPercentage < 70"
+                                                     [class.low]="resumeMatchResult.matchPercentage < 40">
+                          {{ resumeMatchResult.matchPercentage }}%
+                        </div>
+                        <div>
+                          <h4>Match Score</h4>
+                          <p class="text-muted">{{ resumeMatchResult.matchedSkills.length }} of {{ resumeMatchResult.matchedSkills.length + resumeMatchResult.missingSkills.length }} required skills matched</p>
+                        </div>
+                      </div>
+
+                      @if (resumeMatchResult.matchedSkills.length) {
+                        <div class="skill-section">
+                          <h5>Matched Skills</h5>
+                          <div class="skills-list">
+                            @for (s of resumeMatchResult.matchedSkills; track s) {
+                              <span class="skill-chip matched">{{ s }}</span>
+                            }
+                          </div>
+                        </div>
+                      }
+
+                      @if (resumeMatchResult.missingSkills.length) {
+                        <div class="skill-section">
+                          <h5>Missing Skills</h5>
+                          <div class="skills-list">
+                            @for (s of resumeMatchResult.missingSkills; track s) {
+                              <span class="skill-chip missing">{{ s }}</span>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </mat-tab>
+
+              <mat-tab label="Cover Letter">
+                <div class="app-card info-card">
+                  <h3>Cover Letter Generator</h3>
+                  <p class="text-muted" style="margin-bottom:12px">Generate a cover letter based on your resume and this job.</p>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Select Resume Document</mat-label>
+                    <mat-select [(ngModel)]="selectedDocumentId" [disabled]="loadingDocuments">
+                      <mat-option value="">-- select a document --</mat-option>
+                      @for (doc of documents; track doc.id) {
+                        <mat-option [value]="doc.id">{{ doc.fileName }} ({{ doc.type }})</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Tone</mat-label>
+                    <mat-select [(ngModel)]="selectedTone">
+                      @for (t of tones; track t) {
+                        <mat-option [value]="t">{{ t }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button mat-flat-button color="primary" (click)="generateCoverLetter()" [disabled]="generatingCoverLetter || !selectedDocumentId">
+                      @if (generatingCoverLetter) { <mat-spinner diameter="18"/> }
+                      @else { <mat-icon>auto_fix_high</mat-icon> Generate Cover Letter }
+                    </button>
+                    @if (generatedCoverLetter) {
+                      <button mat-stroked-button (click)="copyToClipboard(generatedCoverLetter.coverLetterText)">
+                        <mat-icon>content_copy</mat-icon> Copy
+                      </button>
+                      <button mat-stroked-button (click)="saveCoverLetterAsDocument()">
+                        <mat-icon>save</mat-icon> Save as Document
+                      </button>
+                    }
+                  </div>
+
+                  @if (generatedCoverLetter) {
+                    <div class="result-card" style="margin-top:16px">
+                      <h4>Generated Cover Letter</h4>
+                      <pre class="cover-letter-text">{{ generatedCoverLetter.coverLetterText }}</pre>
+                    </div>
+                  }
+                </div>
+              </mat-tab>
+            </mat-tab-group>
           </div>
         </div>
       }
@@ -230,6 +369,8 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
     }
     .dr-label { font-size: .75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
     .notes-text { color: var(--text-primary); line-height: 1.6; white-space: pre-wrap; }
+    .skills-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .skill-chip { background: #e0e7ff; color: #3730a3; padding: 2px 10px; border-radius: 12px; font-size: .78rem; font-weight: 600; }
 
     .interview-form { background: #f8f9fc; padding: 16px; border-radius: 10px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
 
@@ -260,6 +401,35 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
     .empty-interviews { text-align: center; padding: 32px; color: var(--text-secondary);
       mat-icon { font-size: 40px; width: 40px; height: 40px; opacity: .3; }
     }
+    .result-card {
+      background: #f8f9fc; padding: 16px; border-radius: 10px;
+      border: 1px solid var(--border);
+      h4 { margin: 0 0 12px; font-size: 1rem; font-weight: 600; }
+      h5 { margin: 12px 0 8px; font-size: .875rem; font-weight: 600; color: var(--text-secondary); }
+    }
+    .match-header {
+      display: flex; align-items: center; gap: 16px; margin-bottom: 12px;
+    }
+    .match-circle {
+      width: 64px; height: 64px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem; font-weight: 700; color: white;
+      &.high { background: #059669; }
+      &.medium { background: #d97706; }
+      &.low { background: #dc2626; }
+    }
+    .skill-section { margin-top: 12px; }
+    .skills-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .skill-chip {
+      padding: 2px 10px; border-radius: 12px; font-size: .78rem; font-weight: 600;
+      &.matched { background: #d1fae5; color: #065f46; }
+      &.missing { background: #fee2e2; color: #991b1b; }
+    }
+    .cover-letter-text {
+      background: #fff; padding: 12px; border-radius: 8px;
+      border: 1px solid var(--border); white-space: pre-wrap;
+      font-size: .875rem; line-height: 1.6; max-height: 400px; overflow: auto;
+    }
   `]
 })
 export class ApplicationDetailComponent implements OnInit {
@@ -267,6 +437,7 @@ export class ApplicationDetailComponent implements OnInit {
 
   private appSvc = inject(ApplicationsService);
   private ivSvc  = inject(InterviewsService);
+  private docSvc = inject(DocumentsService);
   private notify = inject(NotificationService);
   private router = inject(Router);
   private dialog = inject(MatDialog);
@@ -279,6 +450,19 @@ export class ApplicationDetailComponent implements OnInit {
   showAddInterview = false;
   savingInterview  = false;
 
+  resumeText = '';
+  coverLetterText = '';
+  resumeMatchResult: ResumeMatchResult | null = null;
+  generatedCoverLetter: CoverLetterDto | null = null;
+  matchingResume = false;
+  generatingCoverLetter = false;
+  selectedTone = 'Professional';
+  tones = ['Professional', 'Friendly', 'Formal', 'Enthusiastic'];
+
+  documents: DocumentDto[] = [];
+  selectedDocumentId: string | null = null;
+  loadingDocuments = false;
+
   interviewForm = this.fb.nonNullable.group({
     interviewDate:   [new Date(), Validators.required],
     interviewType:   ['Phone' as typeof INTERVIEW_TYPES[number], Validators.required],
@@ -287,7 +471,28 @@ export class ApplicationDetailComponent implements OnInit {
     feedback:        ['']
   });
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+    this.loadDocuments();
+  }
+
+  loadDocuments(): void {
+    this.loadingDocuments = true;
+    this.docSvc.getAll().subscribe({
+      next: res => {
+        const raw = res as any;
+        const list: DocumentDto[] =
+          Array.isArray(raw?.data?.Documents) ? raw.data.Documents
+        : Array.isArray(raw?.data?.documents) ? raw.data.documents
+        : Array.isArray(raw?.data)            ? raw.data
+        : Array.isArray(raw)                  ? raw
+        : [];
+        this.documents = list;
+        this.loadingDocuments = false;
+      },
+      error: () => { this.loadingDocuments = false; }
+    });
+  }
 
   load(): void {
     this.loading = true;
@@ -307,6 +512,56 @@ export class ApplicationDetailComponent implements OnInit {
     this.appSvc.updateStatus(this.app.jobAppId, status).subscribe({
       next: res => { this.app = res.data; this.notify.success(`Status updated to ${status}`); },
       error: ()  => { this.notify.error('Failed to update status.'); }
+    });
+  }
+
+  matchResume(): void {
+    if (!this.app || !this.selectedDocumentId) return;
+    this.matchingResume = true;
+    this.resumeMatchResult = null;
+    this.appSvc.matchResume(this.app.jobAppId, { documentId: this.selectedDocumentId }).subscribe({
+      next: res => {
+        this.resumeMatchResult = res.data;
+        this.matchingResume = false;
+        this.notify.success('Resume matched successfully');
+      },
+      error: () => {
+        this.matchingResume = false;
+        this.notify.error('Failed to match resume');
+      }
+    });
+  }
+
+  generateCoverLetter(): void {
+    if (!this.app || !this.selectedDocumentId) return;
+    this.generatingCoverLetter = true;
+    this.generatedCoverLetter = null;
+    this.appSvc.generateCoverLetter(this.app.jobAppId, { documentId: this.selectedDocumentId, tone: this.selectedTone }).subscribe({
+      next: res => {
+        this.generatedCoverLetter = res.data;
+        this.generatingCoverLetter = false;
+        this.notify.success('Cover letter generated');
+      },
+      error: () => {
+        this.generatingCoverLetter = false;
+        this.notify.error('Failed to generate cover letter');
+      }
+    });
+  }
+
+  copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      this.notify.success('Copied to clipboard');
+    });
+  }
+
+  saveCoverLetterAsDocument(): void {
+    if (!this.generatedCoverLetter?.coverLetterText) return;
+    const blob = new Blob([this.generatedCoverLetter.coverLetterText], { type: 'text/plain' });
+    const file = new File([blob], 'cover-letter.txt', { type: 'text/plain' });
+    this.docSvc.upload(file, 'CoverLetter').subscribe({
+      next: () => this.notify.success('Cover letter saved as document'),
+      error: () => this.notify.error('Failed to save cover letter')
     });
   }
 

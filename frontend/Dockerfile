@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN npm run build -- --configuration=production
+RUN npm run build -- --configuration=development
 
 FROM nginx:alpine AS final
 COPY --from=build /app/dist/job-tracker/browser /usr/share/nginx/html
