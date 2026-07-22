@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using JobAppTracker.Application.Features.JobApp.Dtos;
@@ -23,6 +24,7 @@ namespace JobAppTracker.Application.Mappers
                 CreatedAt = jobApp.CreatedAt,
                 UpdatedAt = jobApp.UpdatedAt,
                 Status = jobApp.Status,
+                RequiredSkills= jobApp.RequiredSkills,
                 Interviews = jobApp.Interviews.Select(i => new InterviewDto
                 {
                     InterviewId = i.Id,

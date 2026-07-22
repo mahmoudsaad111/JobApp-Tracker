@@ -161,6 +161,11 @@ namespace JobAppTracker.Infrastructure.Migrations
                     b.Property<int>("WorkMode")
                         .HasColumnType("int");
 
+                    b.Property<string>("_requiredSkills")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("RequiredSkills");
+
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");

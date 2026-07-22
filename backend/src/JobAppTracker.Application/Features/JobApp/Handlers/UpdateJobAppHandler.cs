@@ -38,13 +38,15 @@ namespace JobAppTracker.Application.Features.JobApp.Handlers
                 companyName: request.CompanyName,
                 title: request.Title,
                 appliedAt: jobApp.AppliedAt,
-                type: jobApp.Type,
-                workMode: jobApp.WorkMode,
+                type: request.Type,
+                workMode: request.WorkMode,
                 location: request.Location,
                 description: request.Description,
                 link: request.JobLink
             );
             jobApp.ChangeStatus(request.Status);
+            if (request.RequiredSkills is not null)
+                jobApp.SetRequiredSkills(request.RequiredSkills);
 
             var UpdatedJobApp = _jobAppRepository.Update(jobApp);
             await _jobAppRepository.SaveChangesAsync();
@@ -59,6 +61,8 @@ namespace JobAppTracker.Application.Features.JobApp.Handlers
                 AppliedAt = UpdatedJobApp.AppliedAt,
                 Status = UpdatedJobApp.Status,
                 Description = UpdatedJobApp.Description,
+                RequiredSkills=UpdatedJobApp.RequiredSkills,
+                JobType=UpdatedJobApp.Type,
             };
         }
     }

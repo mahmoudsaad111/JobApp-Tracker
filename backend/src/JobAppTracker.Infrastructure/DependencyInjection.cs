@@ -3,12 +3,15 @@ using JobAppTracker.Application.Common.Interfaces;
 using JobAppTracker.Application.Common.Settings;
 using JobAppTracker.Application.Interfaces.Repositories;
 using JobAppTracker.Application.Interfaces.Services;
+using JobAppTracker.Application.Interfaces.Services.AI;
 using JobAppTracker.Application.Interfaces.Services.Email;
 using JobAppTracker.Application.Interfaces.Services.Frontend;
 using JobAppTracker.Domain.Entities;
 using JobAppTracker.Infrastructure.Data;
 using JobAppTracker.Infrastructure.Repositories;
 using JobAppTracker.Infrastructure.Services;
+using JobAppTracker.Infrastructure.Services.AI;
+using JobAppTracker.Infrastructure.Services.Documents;
 using JobAppTracker.Infrastructure.Services.Email;
 using JobAppTracker.Infrastructure.Services.FileStorage;
 using JobAppTracker.Infrastructure.Services.Frontend;
@@ -56,6 +59,18 @@ namespace JobAppTracker.Infrastructure
 
             services.AddScoped<IFrontendUrlService, FrontendUrlService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+            services.Configure<GeminiOptions>(configuration.GetSection(GeminiOptions.SectionName));
+            services.AddHttpClient<IGeminiClient, GeminiClient>(client =>
+                {
+                 client.BaseAddress = new Uri("https://generativelanguage.googleapis.com/");
+              });
+            services.AddScoped<IJobPostingParserService, GeminiJobPostingParserService>();
+            services.AddScoped<ICoverLetterGeneratorService, GeminiCoverLetterGeneratorService>();
+            services.AddScoped<IResumeMatchService, GeminiResumeMatchService>();
+            services.AddScoped<IDocumentTextExtractorService,DocumentTextExtractorService>();
+
+            
 
             return services;
         }
