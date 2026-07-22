@@ -25,7 +25,8 @@ namespace JobAppTracker.Application.Features.JobApp.Dtos
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; }
-
+        
+        public IEnumerable<string>RequiredSkills{ get; set; } = new List<string>(); 
         public IEnumerable<InterviewDto> Interviews { get; set; } = new List<InterviewDto>();
     }
 

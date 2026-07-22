@@ -16,5 +16,9 @@ namespace JobAppTracker.Application.Features.JobApp.Commands
         public string? JobLink { get; set; }
         public JobAppStatus Status { get; set; }
         public string Description { get; set; }
+
+        public JobType Type {get; set; }
+        public WorkMode WorkMode {get; set; }
+        public IEnumerable<string> RequiredSkills {get; set; }
     }
 }

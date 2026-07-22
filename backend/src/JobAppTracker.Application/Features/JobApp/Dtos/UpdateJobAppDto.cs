@@ -13,7 +13,11 @@ namespace JobAppTracker.Application.Features.JobApp.Dtos
         public string Location { get; set; }
         public string JobLink { get; set; }
         public DateTime AppliedAt { get; set; }
+        public JobType JobType { get; set; }
         public JobAppStatus Status { get; set; }
+
+        public JobType Type { get; set; }
         public string Description { get; set; }
+        public IEnumerable<string> RequiredSkills { get; set; } 
     }
 }

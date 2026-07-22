@@ -29,6 +29,8 @@ services:
       - Email__Password=${EMAIL_PASSWORD}
       # ── Frontend ───────────────────────────────────────────
       - Frontend__BaseUrl=http://localhost:4200
+      # ── External Services ──────────────────────────────────
+      - Gemini__ApiKey=${Gemini__ApiKey}
     volumes:
       - uploads-data:/app/wwwroot/uploads 
 
@@ -49,11 +51,11 @@ services:
           memory: 2gb      
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "MahmoudSaad@123", "-Q", "SELECT 1", "-No"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-      start_period: 60s
+         test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "MahmoudSaad@123", "-d", "JobAppTracker", "-Q", "SELECT 1", "-No"]
+         interval: 15s
+         timeout: 10s
+         retries: 10
+         start_period: 60s
 
 volumes:
   mssql-data:

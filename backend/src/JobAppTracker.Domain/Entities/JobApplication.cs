@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Threading.Tasks.Dataflow;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using JobAppTracker.Domain.Common;
@@ -35,6 +36,9 @@ namespace JobAppTracker.Domain.Entities
         public DateTime CreatedAt { get; private set; }
         public DateTime UpdatedAt { get; private set; }
 
+        private readonly List<string> _requiredSkills = new();
+        public IReadOnlyCollection<string> RequiredSkills => _requiredSkills.AsReadOnly();
+
         /// foreign key to the Users table, indicating which user this job application belongs to
         public Guid UserId { get; private set; }
 
@@ -57,7 +61,9 @@ namespace JobAppTracker.Domain.Entities
             string? link = null,
             JobType type = JobType.FullTime,
             WorkMode workMode = WorkMode.Onsite,
-            JobAppStatus status = JobAppStatus.Draft
+            JobAppStatus status = JobAppStatus.Draft,
+            List<string> requiredSkills = null
+
         )
         {
             Guard.AgainstEmptyGuid(userId, nameof(userId));
@@ -76,7 +82,7 @@ namespace JobAppTracker.Domain.Entities
 
             var now = DateTime.UtcNow;
 
-            return new JobApplication
+            var jobApplication = new JobApplication
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
@@ -91,7 +97,11 @@ namespace JobAppTracker.Domain.Entities
                 AppliedAt = appliedAt,
                 CreatedAt = now,
                 UpdatedAt = now,
+
             };
+            if (requiredSkills != null && requiredSkills.Count > 0)
+                jobApplication.SetRequiredSkills(requiredSkills);
+            return jobApplication;
         }
 
         public void UpdateDetails(
@@ -178,6 +188,21 @@ namespace JobAppTracker.Domain.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
+        public void SetRequiredSkills(IEnumerable<string> skills)
+        {
+            var cleaned = skills
+                .Select(s => s.Trim())
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (cleaned.Count > 30) throw new DomainException("Too many skills — max 30 per application.");
+            if (cleaned.Any(s => s.Length > 50)) throw new DomainException("Each skill must be 50 characters or fewer.");
+
+            _requiredSkills.Clear();
+            _requiredSkills.AddRange(cleaned);
+        }
+
         private static void EnsureValidLink(string? link)
         {
             if (string.IsNullOrWhiteSpace(link))
@@ -189,5 +214,6 @@ namespace JobAppTracker.Domain.Entities
 
         private static string? NormalizeOptional(string? value) =>
             string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
     }
 }

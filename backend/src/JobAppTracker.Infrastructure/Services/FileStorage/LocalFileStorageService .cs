@@ -31,17 +31,8 @@ namespace JobAppTracker.Infrastructure.Services.FileStorage
             var fileName = $"{Guid.NewGuid()}{ext}";
             var fullPath = Path.Combine(dir, fileName);
 
-            Console.WriteLine($"=== FILE SAVE DEBUG ===");
-            Console.WriteLine($"_root:     {_root}");
-            Console.WriteLine($"dir:       {dir}");
-            Console.WriteLine($"fullPath:  {fullPath}");
-            Console.WriteLine($"exists after save: will check below");
-
             await using var stream = File.Create(fullPath);
             await file.CopyToAsync(stream);
-
-            Console.WriteLine($"File exists: {File.Exists(fullPath)}");
-            Console.WriteLine($"Returning:   /uploads/{folder}/{fileName}");
 
             return $"/uploads/{folder}/{fileName}";
         }

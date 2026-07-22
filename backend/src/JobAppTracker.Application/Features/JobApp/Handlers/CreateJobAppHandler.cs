@@ -59,6 +59,10 @@ namespace JobAppTracker.Application.Features.JobApp.Handlers
                 AppliedAt = result.AppliedAt,
                 Status = result.Status,
                 Description = result.Description,
+                RequiredSkills= [.. result.RequiredSkills!],
+                WorkMode = result.WorkMode,
+                Type= result.Type, 
+            
             };
         }
     }

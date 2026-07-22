@@ -64,6 +64,18 @@ export const INTERVIEW_TYPES: InterviewType[] = [
   'Phone', 'Video', 'OnSite', 'Technical', 'HRRound', 'Final',
 ];
 
+// ─── Job Type ────────────────────────────────────────────────────────────────
+export type JobType = 'FullTime' | 'PartTime' | 'Contract' | 'Internship' | 'Freelance' | 'Temporary';
+
+export const JOB_TYPES: JobType[] = [
+  'FullTime', 'PartTime', 'Contract', 'Internship', 'Freelance', 'Temporary',
+];
+
+// ─── Work Mode ───────────────────────────────────────────────────────────────
+export type WorkMode = 'Onsite' | 'Remote' | 'Hybrid';
+
+export const WORK_MODES: WorkMode[] = ['Onsite', 'Remote', 'Hybrid'];
+
 // ─── Job Application Summary (nested inside Interview response) ───────────────
 export interface JobApplicationSummary {
   jobAppId:    string;
@@ -71,9 +83,10 @@ export interface JobApplicationSummary {
   title:       string;
   location:    string;
   status:      ApplicationStatus;
-  workMode:    string;
-  type:        string;
+  workMode:    WorkMode;
+  type:        JobType;
   link?:       string;
+  requiredSkills: string[];
 }
 
 // ─── Interview ────────────────────────────────────────────────────────────────
@@ -119,6 +132,9 @@ export interface JobApplication {
   createdAt:   string;
   updatedAt:   string;
   description: string;
+  type:        JobType;
+  workMode:    WorkMode;
+  requiredSkills: string[];
 }
 
 export interface CreateApplicationRequest {
@@ -129,6 +145,9 @@ export interface CreateApplicationRequest {
   ApplicationDate: Date;
   Status:          ApplicationStatus;
   Description?:    string;
+  Type:            JobType;
+  WorkMode:        WorkMode;
+  RequiredSkills:  string[];
 }
 
 export interface UpdateApplicationRequest {
@@ -139,6 +158,7 @@ export interface UpdateApplicationRequest {
   ApplicationDate: Date;
   Status:          ApplicationStatus;
   Description?:    string;
+  RequiredSkills:  string[];
 }
 
 // ─── API Wrapper ──────────────────────────────────────────────────────────────
@@ -165,6 +185,40 @@ export interface PagedQuery {
   sortDir?:  'asc' | 'desc';
   fromDate?: Date;
   toDate?:   Date;
+}
+
+// ─── Job Posting Parser ───────────────────────────────────────────────────────
+export interface ParseJobPostingRequest {
+  rawText: string;
+}
+
+export interface ParsedJobPosting {
+  companyName: string | null;
+  jobTitle: string | null;
+  location: string | null;
+  jobType: string | null;
+  salaryRange: string | null;
+  requiredSkills: string[];
+}
+
+// ─── AI Features ──────────────────────────────────────────────────────────────
+export interface MatchResumeRequest {
+  documentId: string;
+}
+
+export interface ResumeMatchResult {
+  matchedSkills: string[];
+  missingSkills: string[];
+  matchPercentage: number;
+}
+
+export interface GenerateCoverLetterRequest {
+  documentId: string;
+  tone?: string;
+}
+
+export interface CoverLetterDto {
+  coverLetterText: string;
 }
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────

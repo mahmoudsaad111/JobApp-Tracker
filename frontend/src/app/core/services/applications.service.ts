@@ -9,13 +9,20 @@ import {
   ApiResponse,
   PagedResponse,
   PagedQuery,
-  ApplicationStatus
+  ApplicationStatus,
+  ParseJobPostingRequest,
+  ParsedJobPosting,
+  MatchResumeRequest,
+  ResumeMatchResult,
+  GenerateCoverLetterRequest,
+  CoverLetterDto
 } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class ApplicationsService {
   private http = inject(HttpClient);
   private base  = `${environment.apiUrl}/JobApp`;
+  private parseBase = `${environment.apiUrl}/job-postings`;
 
   // ─── List (paged + filtered) ─────────────────────────────────────────────────
   getAll(query: PagedQuery = {}): Observable<PagedResponse<JobApplication>> {
@@ -55,5 +62,20 @@ export class ApplicationsService {
   // ─── Delete ──────────────────────────────────────────────────────────────────
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
+  }
+
+  // ─── Parse Job Posting ───────────────────────────────────────────────────────
+  parseJobPosting(body: ParseJobPostingRequest): Observable<ParsedJobPosting> {
+    return this.http.post<ParsedJobPosting>(`${this.parseBase}/parse`, body);
+  }
+
+  // ─── Resume Match ────────────────────────────────────────────────────────────
+  matchResume(jobApplicationId: string, body: MatchResumeRequest): Observable<ApiResponse<ResumeMatchResult>> {
+    return this.http.post<ApiResponse<ResumeMatchResult>>(`${environment.apiUrl}/job-applications/${jobApplicationId}/match`, body);
+  }
+
+  // ─── Cover Letter Generation ────────────────────────────────────────────────
+  generateCoverLetter(jobApplicationId: string, body: GenerateCoverLetterRequest): Observable<ApiResponse<CoverLetterDto>> {
+    return this.http.post<ApiResponse<CoverLetterDto>>(`${environment.apiUrl}/job-applications/${jobApplicationId}/cover-letter`, body);
   }
 }
