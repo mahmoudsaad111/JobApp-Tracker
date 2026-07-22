@@ -20,16 +20,18 @@ namespace JobAppTracker.Infrastructure.Repositories
 
         public async Task<IEnumerable<Note>> GetNotesForJobApp(Guid jobAppId)
         {
-            var notes = await _appDbContext.Notes.Where(n => n.JobAppId == jobAppId).ToListAsync();
-            return notes;
+            return await _appDbContext.Notes
+                .AsNoTracking()
+                .Where(n => n.JobAppId == jobAppId)
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<Note>> GetNotesForUser(Guid userId)
         {
-            IEnumerable<Note> notes = await _appDbContext
-                .Notes.Where(n => n.UserId == userId)
+            return await _appDbContext.Notes
+                .AsNoTracking()
+                .Where(n => n.UserId == userId)
                 .ToListAsync();
-            return notes;
         }
     }
 }

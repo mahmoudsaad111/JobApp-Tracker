@@ -97,7 +97,7 @@ interface EditForm {
     <div class="search-field-wrap" [class.search-field-wrap--active]="searchQuery()">
       <mat-icon class="search-icon">search</mat-icon>
       <input class="search-input" type="text"
-             placeholder="Search company, role, interviewer…"
+             placeholder="Search company, role, interviewer\u2026"
              [value]="searchQuery()"
              (input)="searchQuery.set($any($event.target).value); resetPage()"/>
       @if (searchQuery()) {
@@ -159,7 +159,7 @@ interface EditForm {
                (change)="dateFrom.set($any($event.target).value); resetPage()"/>
         @if (!dateFrom()) { <span class="date-placeholder">From</span> }
       </div>
-      <span class="date-arrow">→</span>
+      <span class="date-arrow">\u2192</span>
       <div class="date-field" [class.date-field--set]="dateTo()">
         <mat-icon>event</mat-icon>
         <input type="date" class="date-input" [value]="dateTo()"
@@ -194,7 +194,7 @@ interface EditForm {
       }
       @if (dateFrom() || dateTo()) {
         <span class="filter-tag">
-          <mat-icon>date_range</mat-icon>{{ dateFrom() || '…' }} → {{ dateTo() || '…' }}
+          <mat-icon>date_range</mat-icon>{{ dateFrom() || '\u2026' }} \u2192 {{ dateTo() || '\u2026' }}
           <button (click)="dateFrom.set(''); dateTo.set(''); resetPage()"><mat-icon>close</mat-icon></button>
         </span>
       }
@@ -287,7 +287,7 @@ interface EditForm {
           </button>
           @for (p of visiblePages(); track $index) {
             @if (p === -1) {
-              <span class="page-ellipsis">…</span>
+              <span class="page-ellipsis">\u2026</span>
             } @else {
               <button class="page-num-btn" [class.page-num-btn--active]="p === currentPage()" (click)="goToPage(p)">{{ p + 1 }}</button>
             }
@@ -326,7 +326,7 @@ interface EditForm {
         </button>
         <button class="action-btn action-btn--primary" (click)="saveEdit()" [disabled]="saving()">
           @if (saving()) { <mat-spinner diameter="16"/> } @else { <mat-icon>check</mat-icon> }
-          {{ saving() ? 'Saving…' : 'Save Changes' }}
+          {{ saving() ? 'Saving\u2026' : 'Save Changes' }}
         </button>
       }
     </div>
@@ -339,8 +339,8 @@ interface EditForm {
         {{ (selected()!.jobApplication?.companyName ?? '?')[0].toUpperCase() }}
       </div>
       <div>
-        <div class="detail-role">{{ selected()!.jobApplication?.title ?? '—' }}</div>
-        <div class="detail-company">&#64; {{ selected()!.jobApplication?.companyName ?? '—' }}</div>
+        <div class="detail-role">{{ selected()!.jobApplication?.title ?? '\u2014' }}</div>
+        <div class="detail-company">&#64; {{ selected()!.jobApplication?.companyName ?? '\u2014' }}</div>
       </div>
     </div>
     <div class="detail-badges">
@@ -446,18 +446,18 @@ interface EditForm {
         </div>
         <div class="edit-field edit-field--wide">
           <label class="edit-label"><mat-icon>sticky_note_2</mat-icon> Interview Notes</label>
-          <textarea class="edit-textarea" rows="4" placeholder="Preparation notes, questions to ask…" [(ngModel)]="editForm.note"></textarea>
+          <textarea class="edit-textarea" rows="4" placeholder="Preparation notes, questions to ask\u2026" [(ngModel)]="editForm.note"></textarea>
         </div>
         <div class="edit-field edit-field--wide">
           <label class="edit-label"><mat-icon>rate_review</mat-icon> Recruiter Feedback</label>
-          <textarea class="edit-textarea" rows="4" placeholder="Feedback received after the interview…" [(ngModel)]="editForm.feedback"></textarea>
+          <textarea class="edit-textarea" rows="4" placeholder="Feedback received after the interview\u2026" [(ngModel)]="editForm.feedback"></textarea>
         </div>
       </div>
       <div class="edit-footer">
         <button class="action-btn action-btn--ghost" (click)="cancelEdit()" [disabled]="saving()">Cancel</button>
         <button class="action-btn action-btn--primary" (click)="saveEdit()" [disabled]="saving()">
           @if (saving()) { <mat-spinner diameter="16"/> } @else { <mat-icon>check</mat-icon> }
-          {{ saving() ? 'Saving…' : 'Save Changes' }}
+          {{ saving() ? 'Saving\u2026' : 'Save Changes' }}
         </button>
       </div>
     </div>
@@ -472,15 +472,15 @@ interface EditForm {
 </div>
 }
 
-<!-- ── Card template ── -->
+<!-- \u2500\u2500 Card template \u2500\u2500 -->
 <ng-template #cardTpl let-iv>
   <div class="ivc-top">
     <div class="co-avatar" [style.background]="avatarBg(iv.jobApplication?.companyName ?? '')">
       {{ (iv.jobApplication?.companyName ?? '?')[0].toUpperCase() }}
     </div>
     <div class="ivc-meta">
-      <div class="ivc-title">{{ iv.jobApplication?.title ?? '—' }}</div>
-      <div class="ivc-company text-muted">{{ iv.jobApplication?.companyName ?? '—' }}</div>
+      <div class="ivc-title">{{ iv.jobApplication?.title ?? '\u2014' }}</div>
+      <div class="ivc-company text-muted">{{ iv.jobApplication?.companyName ?? '\u2014' }}</div>
     </div>
     <span class="type-chip type-chip--sm"
           [style.color]="tColor(iv.interviewType)"
@@ -535,10 +535,10 @@ interface EditForm {
 </ng-template>
   `,
   styles: [`
-    /* ── Shared overrides that align with global page styles ── */
+    /* \u2500\u2500 Shared overrides that align with global page styles \u2500\u2500 */
     @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
 
-    /* ── Filters card ── */
+    /* \u2500\u2500 Filters card \u2500\u2500 */
     .filters-card {
       display: flex; flex-wrap: wrap; gap: 10px;
       padding: 14px 18px; margin-bottom: 16px; align-items: center;
@@ -679,7 +679,7 @@ interface EditForm {
     /* Grid */
     .iv-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:14px; }
 
-    /* Interview card — app-card provides bg/border/radius/shadow */
+    /* Interview card \u2014 app-card provides bg/border/radius/shadow */
     .iv-card {
       display:flex; flex-direction:column; gap:11px;
       padding:18px 20px 14px; cursor:pointer; user-select:none;
@@ -690,7 +690,7 @@ interface EditForm {
     .iv-card--upcoming:hover { border-left-color:var(--primary,#6366f1); }
     .iv-card--past { opacity:.82; &:hover { border-left-color:var(--text-secondary,#94a3b8); } }
 
-    /* Avatar — reuse dashboard co-avatar pattern */
+    /* Avatar \u2014 reuse dashboard co-avatar pattern */
     .co-avatar {
       width:40px; height:40px; border-radius:10px; flex-shrink:0;
       color:#fff; font-weight:700; font-size:.95rem;
@@ -698,7 +698,7 @@ interface EditForm {
     }
     .co-avatar--lg { width:56px; height:56px; border-radius:14px; font-size:1.3rem; font-weight:900; }
 
-    /* Status/type chips — unified with dashboard pattern */
+    /* Status/type chips \u2014 unified with dashboard pattern */
     .status-chip {
       display:inline-flex; align-items:center;
       padding:3px 10px; border-radius:20px;
@@ -787,7 +787,7 @@ interface EditForm {
     .page-num-btn--active { background:var(--primary,#6366f1)!important; border-color:var(--primary,#6366f1)!important; color:#fff!important; }
     .page-ellipsis { width:24px; text-align:center; font-size:.9rem; color:var(--text-secondary); }
 
-    /* ── Detail page ── */
+    /* \u2500\u2500 Detail page \u2500\u2500 */
     .back-btn {
       display:inline-flex; align-items:center; gap:6px; background:none; border:none;
       cursor:pointer; color:var(--primary,#6366f1); font-size:.9rem; font-weight:700;
@@ -797,7 +797,7 @@ interface EditForm {
     }
     .detail-actions { display:flex; align-items:center; gap:8px; }
 
-    /* Action buttons — match applications pattern */
+    /* Action buttons \u2014 match applications pattern */
     .action-btn {
       display:inline-flex; align-items:center; gap:6px;
       border-radius:10px; padding:8px 16px; font-size:.85rem; font-weight:700;
@@ -850,7 +850,7 @@ interface EditForm {
     .info-card--notes    { border-left-color:#3b82f6; .info-card-header { background:#eff6ff; color:#1d4ed8; } }
     .info-card--feedback { border-left-color:#22c55e; .info-card-header { background:#f0fdf4; color:#15803d; } }
 
-    /* Edit form — aligned with Applications form style */
+    /* Edit form \u2014 aligned with Applications form style */
     .edit-panel { padding:24px 28px; margin-bottom:20px; }
     .edit-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:18px; margin-bottom:22px; @media (max-width:600px) { grid-template-columns:1fr; } }
     .edit-field { display:flex; flex-direction:column; gap:6px; }
@@ -1023,7 +1023,7 @@ export class InterviewsComponent implements OnInit {
   tColor(t: InterviewType)                 { return typeMeta(t).color; }
   sColor(s: ApplicationStatus | undefined) { return s ? statusMeta(s).color : '#6b7280'; }
   sBg(s: ApplicationStatus | undefined)    { return s ? statusMeta(s).bg    : '#f3f4f6'; }
-  sLabel(s: ApplicationStatus | undefined) { return s ? statusMeta(s).label : '—'; }
+  sLabel(s: ApplicationStatus | undefined) { return s ? statusMeta(s).label : '\u2014'; }
   dayLabel(d: Date | string)               { return relativeDay(d); }
   isToday(d: Date | string): boolean {
     const today = new Date(); today.setHours(0,0,0,0);

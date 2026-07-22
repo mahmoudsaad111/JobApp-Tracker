@@ -19,60 +19,71 @@ namespace JobAppTracker.Infrastructure.Repositories
             _appContext = appContext;
         }
 
-        public async Task<DashboardSummaryDto> GetDashboardSummaryAsync(string UserId)
+        public async Task<DashboardSummaryDto> GetDashboardSummaryAsync(string userId)
         {
-            var jobApplications = await _appContext
-                .JobApplications.Where(j => j.UserId == Guid.Parse(UserId))
+            var userGuid = Guid.Parse(userId);
+            var weekAgo = DateTime.UtcNow.AddDays(-7);
+            var now = DateTime.UtcNow;
+
+            var applicationsQuery = _appContext.JobApplications
+                .AsNoTracking()
+                .Where(j => j.UserId == userGuid);
+
+            // Aggregate counts run as SQL COUNT/GROUP BY, not loaded into memory
+            var totalApplications = await applicationsQuery.CountAsync();
+            var thisWeekApplications = await applicationsQuery.CountAsync(a => a.AppliedAt >= weekAgo);
+
+            var statusCounts = await applicationsQuery
+                .GroupBy(a => a.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
                 .ToListAsync();
-            var interviews = await _appContext
-                .Interviews.Include(i => i.JobApplication)
-                .Where(i => i.UserId == Guid.Parse(UserId))
+
+            int CountFor(JobAppStatus status) =>
+                statusCounts.FirstOrDefault(s => s.Status == status)?.Count ?? 0;
+
+            var upcomingInterviews = await _appContext.Interviews
+                .AsNoTracking()
+                .Where(i => i.UserId == userGuid && i.InterviewDate >= now)
+                .OrderBy(i => i.InterviewDate)
+                .Take(5)
+                .Select(a => new UpcomingInterviewDto
+                {
+                    Id = a.Id,
+                    Company = a.JobApplication.CompanyName,
+                    Position = a.JobApplication.Title,
+                    InterviewDate = a.InterviewDate
+                })
+                .ToListAsync(); // only pulls the 2 fields needed, not the whole JobApplication
+
+            var recentApplications = await applicationsQuery
+                .OrderByDescending(a => a.AppliedAt)
+                .Take(5)
+                .Select(a => new RecentApplicationDto
+                {
+                    JobAppId = a.Id,
+                    Company = a.CompanyName,
+                    Position = a.Title,
+                    AppliedDate = a.AppliedAt,
+                    Status = a.Status.ToString()
+                })
                 .ToListAsync();
-            int TotalApplications = jobApplications.Count;
-            int ThisWeekApplications = jobApplications.Count(a =>
-                a.AppliedAt >= DateTime.UtcNow.AddDays(-7)
-            );
 
             return new DashboardSummaryDto
             {
-                TotalApplications = TotalApplications,
-                ThisWeekApplications = ThisWeekApplications,
+                TotalApplications = totalApplications,
+                ThisWeekApplications = thisWeekApplications,
                 ByStatus = new StatusBreakdownDto
                 {
-                    Applied = jobApplications.Count(a => a.Status == JobAppStatus.Submitted),
-                    Interviewing = jobApplications.Count(a =>
-                        a.Status == JobAppStatus.InterviewScheduled
-                    ),
-                    Offered = jobApplications.Count(a => a.Status == JobAppStatus.UnderReview),
-                    Rejected = jobApplications.Count(a => a.Status == JobAppStatus.Rejected),
-                    Withdrawn = jobApplications.Count(a => a.Status == JobAppStatus.Withdrawn),
+                    Applied = CountFor(JobAppStatus.Submitted),
+                    Interviewing = CountFor(JobAppStatus.InterviewScheduled),
+                    Offered = CountFor(JobAppStatus.UnderReview),
+                    Rejected = CountFor(JobAppStatus.Rejected),
+                    Withdrawn = CountFor(JobAppStatus.Withdrawn)
                 },
-
-                UpcomingInterviews = interviews
-                    .Where(a => a.InterviewDate >= DateTime.UtcNow)
-                    .OrderBy(a => a.InterviewDate)
-                    .Take(5)
-                    .Select(a => new UpcomingInterviewDto
-                    {
-                        Id = a.Id,
-                        Company = a.JobApplication.CompanyName,
-                        Position = a.JobApplication.Title,
-                        InterviewDate = a.InterviewDate,
-                    })
-                    .ToList(),
-                RecentApplications = jobApplications
-                    .OrderByDescending(a => a.AppliedAt)
-                    .Take(5)
-                    .Select(a => new RecentApplicationDto
-                    {
-                        JobAppId = a.Id,
-                        Company = a.CompanyName,
-                        Position = a.Title,
-                        AppliedDate = a.AppliedAt,
-                        Status = a.Status.ToString(),
-                    })
-                    .ToList(),
+                UpcomingInterviews = upcomingInterviews,
+                RecentApplications = recentApplications
             };
         }
+
     }
 }

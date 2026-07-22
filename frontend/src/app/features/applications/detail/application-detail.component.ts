@@ -232,7 +232,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
 
                   <mat-form-field appearance="outline" class="full-width">
                     <mat-label>Select Resume Document</mat-label>
-                    <mat-select [(ngModel)]="selectedDocumentId" [disabled]="loadingDocuments">
+                    <mat-select [(ngModel)]="selectedDocumentId" [disabled]="loadingDocuments" panelClass="detail-select-panel">
                       <mat-option value="">-- select a document --</mat-option>
                       @for (doc of documents; track doc.id) {
                         <mat-option [value]="doc.id">{{ doc.fileName }} ({{ doc.type }})</mat-option>
@@ -292,24 +292,24 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
                   <h3>Cover Letter Generator</h3>
                   <p class="text-muted" style="margin-bottom:12px">Generate a cover letter based on your resume and this job.</p>
 
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Select Resume Document</mat-label>
-                    <mat-select [(ngModel)]="selectedDocumentId" [disabled]="loadingDocuments">
-                      <mat-option value="">-- select a document --</mat-option>
-                      @for (doc of documents; track doc.id) {
-                        <mat-option [value]="doc.id">{{ doc.fileName }} ({{ doc.type }})</mat-option>
-                      }
-                    </mat-select>
-                  </mat-form-field>
+                   <mat-form-field appearance="outline" class="full-width">
+                     <mat-label>Select Resume Document</mat-label>
+                     <mat-select [(ngModel)]="selectedDocumentId" [disabled]="loadingDocuments" panelClass="detail-select-panel">
+                       <mat-option value="">-- select a document --</mat-option>
+                       @for (doc of documents; track doc.id) {
+                         <mat-option [value]="doc.id">{{ doc.fileName }} ({{ doc.type }})</mat-option>
+                       }
+                     </mat-select>
+                   </mat-form-field>
 
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Tone</mat-label>
-                    <mat-select [(ngModel)]="selectedTone">
-                      @for (t of tones; track t) {
-                        <mat-option [value]="t">{{ t }}</mat-option>
-                      }
-                    </mat-select>
-                  </mat-form-field>
+                   <mat-form-field appearance="outline" class="full-width">
+                     <mat-label>Tone</mat-label>
+                     <mat-select [(ngModel)]="selectedTone" panelClass="detail-select-panel">
+                       @for (t of tones; track t) {
+                         <mat-option [value]="t">{{ t }}</mat-option>
+                       }
+                     </mat-select>
+                   </mat-form-field>
 
                   <div style="display:flex;gap:8px;flex-wrap:wrap">
                     <button mat-flat-button color="primary" (click)="generateCoverLetter()" [disabled]="generatingCoverLetter || !selectedDocumentId">
@@ -342,93 +342,141 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
   `,
   styles: [`
     .detail-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
       @media (max-width: 900px) { grid-template-columns: 1fr; }
     }
-    .left-col, .right-col { display: flex; flex-direction: column; gap: 16px; }
-    .info-card { padding: 20px; h3 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; } }
+    .left-col, .right-col { display: flex; flex-direction: column; gap: 20px; }
+    .info-card { padding: 22px; h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 18px; color: var(--text-primary); letter-spacing: -0.01em; } }
 
-    .status-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .status-row { display: flex; flex-wrap: wrap; gap: 10px; }
     .status-pill {
-      padding: 6px 14px; border-radius: 20px; font-size: .8rem; font-weight: 600;
-      border: 2px solid transparent; cursor: pointer; transition: all .15s;
+      padding: 8px 18px; border-radius: 22px; font-size: 0.8rem; font-weight: 600;
+      border: 2px solid transparent; cursor: pointer; transition: all 0.2s ease;
 
-      &.Draft              { background: #f3f4f6; color: #374151;  &.active, &:hover { border-color: #6b7280; } }
-      &.Submitted          { background: #dbeafe; color: #1e40af;  &.active, &:hover { border-color: #1e40af; } }
-      &.UnderReview        { background: #fef3c7; color: #92400e;  &.active, &:hover { border-color: #d97706; } }
-      &.InterviewScheduled { background: #e0e7ff; color: #3730a3;  &.active, &:hover { border-color: #4f46e5; } }
-      &.Interviewed        { background: #ede9fe; color: #5b21b6;  &.active, &:hover { border-color: #7c3aed; } }
-      &.Accepted           { background: #d1fae5; color: #065f46;  &.active, &:hover { border-color: #059669; } }
-      &.Rejected           { background: #fee2e2; color: #991b1b;  &.active, &:hover { border-color: #dc2626; } }
-      &.Withdrawn          { background: #fce7f3; color: #9d174d;  &.active, &:hover { border-color: #db2777; } }
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+      }
+
+      &.Draft              { background: #f1f5f9; color: #334155; border-color: transparent; &.active, &:hover { border-color: #64748b; background: #e2e8f0; } }
+      &.Submitted          { background: #eff6ff; color: #1d4ed8; border-color: transparent; &.active, &:hover { border-color: #2563eb; } }
+      &.UnderReview        { background: #fffbeb; color: #b45309; border-color: transparent; &.active, &:hover { border-color: #d97706; } }
+      &.InterviewScheduled { background: #eef2ff; color: #4338ca; border-color: transparent; &.active, &:hover { border-color: #4f46e5; } }
+      &.Interviewed        { background: #f5f3ff; color: #6d28d9; border-color: transparent; &.active, &:hover { border-color: #7c3aed; } }
+      &.Accepted           { background: #ecfdf5; color: #047857; border-color: transparent; &.active, &:hover { border-color: #059669; } }
+      &.Rejected           { background: #fef2f2; color: #b91c1c; border-color: transparent; &.active, &:hover { border-color: #dc2626; } }
+      &.Withdrawn          { background: #fdf2f8; color: #be185d; border-color: transparent; &.active, &:hover { border-color: #db2777; } }
     }
 
-    .detail-list { display: flex; flex-direction: column; gap: 14px; }
+    .detail-list { display: flex; flex-direction: column; gap: 16px; }
     .detail-row { display: flex; align-items: flex-start; gap: 12px;
-      mat-icon { color: var(--text-secondary); margin-top: 2px; font-size: 18px; width: 18px; height: 18px; }
+      mat-icon { color: var(--text-tertiary); margin-top: 2px; font-size: 18px; width: 18px; height: 18px; }
     }
-    .dr-label { font-size: .75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
-    .notes-text { color: var(--text-primary); line-height: 1.6; white-space: pre-wrap; }
-    .skills-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-    .skill-chip { background: #e0e7ff; color: #3730a3; padding: 2px 10px; border-radius: 12px; font-size: .78rem; font-weight: 600; }
+    .dr-label { font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; font-weight: 600; }
+    .notes-text { color: var(--text-primary); line-height: 1.65; white-space: pre-wrap; }
+    .skills-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .skill-chip {
+      background: #eef2ff; color: #4338ca; padding: 3px 12px; border-radius: 20px;
+      font-size: 0.78rem; font-weight: 600; border: 1px solid #e0e7ff;
+      transition: all 0.2s ease;
+      &:hover { background: #e0e7ff; transform: translateY(-1px); }
+    }
 
-    .interview-form { background: #f8f9fc; padding: 16px; border-radius: 10px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .interview-form {
+      background: #f8fafc; padding: 20px; border-radius: var(--radius-md);
+      margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px;
+      border: 1px solid var(--border-color);
+      animation: slideIn 0.25s ease;
+    }
 
     .interview-item {
-      border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px;
-      cursor: pointer; transition: border-color .18s, box-shadow .18s, transform .15s;
-      position: relative;
+      border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; margin-bottom: 10px;
+      cursor: pointer; transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+      position: relative; background: var(--bg-surface);
+
       &:hover {
-        border-color: var(--primary, #6366f1);
-        box-shadow: 0 4px 14px rgba(99,102,241,.1);
+        border-color: var(--primary);
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.1);
         transform: translateY(-2px);
       }
     }
     .iv-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .iv-type { background: #e0e7ff; color: #3730a3; padding: 2px 10px; border-radius: 12px; font-size: .78rem; font-weight: 600; }
-    .iv-date { display: flex; align-items: center; gap: 6px; font-size: .875rem; color: var(--text-secondary);
-      mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    .iv-type {
+      background: #eef2ff; color: #4338ca; padding: 3px 12px; border-radius: 20px;
+      font-size: 0.78rem; font-weight: 600; border: 1px solid #e0e7ff;
     }
-    .iv-note { margin-top: 8px; font-size: .875rem; color: var(--text-secondary); }
+    .iv-date { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text-secondary);
+      mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--text-tertiary); }
+    }
+    .iv-note { margin-top: 8px; font-size: 0.85rem; color: var(--text-secondary); }
     .iv-hint {
       display: flex; align-items: center; gap: 2px; justify-content: flex-end;
-      font-size: .75rem; color: var(--primary, #6366f1); margin-top: 8px; opacity: 0;
-      transition: opacity .18s;
+      font-size: 0.75rem; color: var(--primary); margin-top: 8px; opacity: 0; transition: opacity 0.2s ease; font-weight: 600;
       mat-icon { font-size: 15px; width: 15px; height: 15px; }
     }
     .interview-item:hover .iv-hint { opacity: 1; }
 
-    .empty-interviews { text-align: center; padding: 32px; color: var(--text-secondary);
-      mat-icon { font-size: 40px; width: 40px; height: 40px; opacity: .3; }
+    .empty-interviews {
+      text-align: center; padding: 36px; color: var(--text-secondary);
+      mat-icon { font-size: 44px; width: 44px; height: 44px; opacity: 0.25; margin-bottom: 8px; }
+      p { font-size: 0.9rem; }
     }
+
     .result-card {
-      background: #f8f9fc; padding: 16px; border-radius: 10px;
-      border: 1px solid var(--border);
-      h4 { margin: 0 0 12px; font-size: 1rem; font-weight: 600; }
-      h5 { margin: 12px 0 8px; font-size: .875rem; font-weight: 600; color: var(--text-secondary); }
+      background: #f8fafc; padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color);
+      h4 { margin: 0 0 14px; font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+      h5 { margin: 14px 0 10px; font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
     }
+
     .match-header {
-      display: flex; align-items: center; gap: 16px; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 18px; margin-bottom: 14px;
     }
+
     .match-circle {
-      width: 64px; height: 64px; border-radius: 50%;
+      width: 72px; height: 72px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.25rem; font-weight: 700; color: white;
-      &.high { background: #059669; }
-      &.medium { background: #d97706; }
-      &.low { background: #dc2626; }
+      font-size: 1.35rem; font-weight: 800; color: white;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+      transition: transform 0.2s ease;
+
+      &:hover { transform: scale(1.06); }
+      &.high { background: linear-gradient(135deg, #10b981, #34d399); }
+      &.medium { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+      &.low { background: linear-gradient(135deg, #ef4444, #f87171); }
     }
-    .skill-section { margin-top: 12px; }
-    .skills-list { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .skill-section { margin-top: 14px; }
+    .skills-list { display: flex; flex-wrap: wrap; gap: 8px; }
     .skill-chip {
-      padding: 2px 10px; border-radius: 12px; font-size: .78rem; font-weight: 600;
-      &.matched { background: #d1fae5; color: #065f46; }
-      &.missing { background: #fee2e2; color: #991b1b; }
+      padding: 3px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600;
+      transition: all 0.2s ease; border: 1px solid transparent;
+      &.matched { background: #d1fae5; color: #065f46; border-color: #a7f3d0; &:hover { background: #a7f3d0; transform: translateY(-1px); } }
+      &.missing { background: #fee2e2; color: #991b1b; border-color: #fecaca; &:hover { background: #fecaca; transform: translateY(-1px); } }
     }
+
     .cover-letter-text {
-      background: #fff; padding: 12px; border-radius: 8px;
-      border: 1px solid var(--border); white-space: pre-wrap;
-      font-size: .875rem; line-height: 1.6; max-height: 400px; overflow: auto;
+      background: #fff; padding: 16px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color); white-space: pre-wrap;
+      font-size: 0.875rem; line-height: 1.7; max-height: 420px; overflow: auto;
+      color: var(--text-primary);
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .full-width { width: 100%; }
+
+    :host ::ng-deep .detail-select-panel {
+      min-width: 260px !important;
+      z-index: 9999 !important;
+    }
+
+    :host ::ng-deep .mat-mdc-select-panel {
+      border-radius: var(--radius-md) !important;
+      border: 1px solid var(--border-color) !important;
+      box-shadow: var(--shadow-lg) !important;
+    }
+
+    :host ::ng-deep .mat-mdc-tab-body-wrapper {
+      overflow: visible !important;
     }
   `]
 })

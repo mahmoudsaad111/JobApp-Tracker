@@ -196,67 +196,102 @@ function statusKey(s: string): string {
   styles: [`
     .filters-card {
       display: flex; flex-wrap: wrap; gap: 12px;
-      padding: 16px 20px; margin-bottom: 16px; align-items: center;
+      padding: 18px 22px; margin-bottom: 18px; align-items: center;
+      border-radius: var(--radius-md);
     }
-    .search-field { flex: 1; min-width: 220px; }
+    .search-field { flex: 1; min-width: 240px; }
     .status-field { width: 180px; }
-    .date-field   { width: 160px; }
+    .date-field   { width: 170px; }
 
-    .table-card { overflow: hidden; }
-    .table-loading { display: flex; justify-content: center; padding: 60px; }
+    .table-card {
+      overflow: hidden;
+      border-radius: var(--radius-md);
+    }
+    .table-loading {
+      display: flex; justify-content: center; align-items: center;
+      padding: 72px;
+    }
     .empty-table {
-      text-align: center; padding: 60px 24px;
-      mat-icon { font-size: 56px; width: 56px; height: 56px; color: #d1d5db; }
-      h3 { margin: 12px 0 4px; font-size: 1.1rem; }
-      p  { color: var(--text-secondary); margin-bottom: 20px; }
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center; padding: 72px 28px; color: var(--text-secondary);
+
+      mat-icon {
+        font-size: 52px; width: 52px; height: 52px;
+        color: #cbd5e1; margin-bottom: 14px;
+      }
+      h3 {
+        margin: 0 0 6px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+      p {
+        color: var(--text-secondary);
+        margin-bottom: 22px;
+        max-width: 420px;
+      }
     }
 
-    .company-cell { display: flex; align-items: center; gap: 10px; }
+    .company-cell {
+      display: flex; align-items: center; gap: 12px;
+    }
     .co-avatar {
-      width: 36px; height: 36px; border-radius: 8px;
-      background: linear-gradient(135deg, var(--primary-light), var(--primary));
-      color: white; font-weight: 700; font-size: .875rem;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(99,102,241,0.25);
     }
-    .co-name { font-weight: 500; }
-    .co-loc  { font-size: .78rem; }
+    .co-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+    }
+    .co-loc  {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
 
-    /* ── Status chips ──────────────────────────────────────────────────────
-       Class pattern: .status-chip.status--{statusKey(value)}
-       statusKey() lowercases and strips spaces so:
-         Draft              → status--draft
-         Submitted          → status--submitted
-         UnderReview        → status--underreview
-         InterviewScheduled → status--interviewscheduled
-         Interviewed        → status--interviewed
-         Accepted           → status--accepted
-         Rejected           → status--rejected
-         Withdrawn          → status--withdrawn
-    ──────────────────────────────────────────────────────────────────────── */
     .status-chip {
       display: inline-flex; align-items: center;
-      padding: 3px 10px; border-radius: 20px;
-      font-size: .75rem; font-weight: 700; white-space: nowrap;
-      /* fallback — should never show if all statuses are mapped */
-      background: #f3f4f6; color: #6b7280;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      white-space: nowrap;
+      border: 1px solid transparent;
+      letter-spacing: 0.03em;
     }
 
-    .status--draft              { background: #f3f4f6; color: #374151; }
-    .status--submitted          { background: #dbeafe; color: #1e40af; }
-    .status--underreview        { background: #fef3c7; color: #92400e; }
-    .status--interviewscheduled { background: #e0e7ff; color: #3730a3; }
-    .status--interviewed        { background: #ede9fe; color: #5b21b6; }
-    .status--accepted           { background: #d1fae5; color: #065f46; }
-    .status--rejected           { background: #fee2e2; color: #991b1b; }
-    .status--withdrawn          { background: #fce7f3; color: #9d174d; }
+    .status--draft              { background: #f1f5f9; color: #334155; border-color: #e2e8f0; }
+    .status--submitted          { background: #eff6ff; color: #1d4ed8; border-color: #dbeafe; }
+    .status--underreview        { background: #fffbeb; color: #b45309; border-color: #fef3c7; }
+    .status--interviewscheduled { background: #eef2ff; color: #4338ca; border-color: #e0e7ff; }
+    .status--interviewed        { background: #f5f3ff; color: #6d28d9; border-color: #ede9fe; }
+    .status--accepted           { background: #ecfdf5; color: #047857; border-color: #d1fae5; }
+    .status--rejected           { background: #fef2f2; color: #b91c1c; border-color: #fee2e2; }
+    .status--withdrawn          { background: #fdf2f8; color: #be185d; border-color: #fce7f3; }
 
     .interview-badge {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 22px; height: 22px; border-radius: 50%;
-      background: #fef3c7; color: #92400e; font-size: .75rem; font-weight: 700;
+      min-width: 24px; height: 24px; padding: 0 7px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      color: #92400e;
+      font-size: 0.75rem; font-weight: 700;
+      border: 1px solid #fcd34d;
     }
 
-    .row-actions { display: flex; opacity: 0; transition: opacity .15s; }
+    .row-actions {
+      display: flex; gap: 2px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
     tr.mat-mdc-row:hover .row-actions { opacity: 1; }
   `]
 })
