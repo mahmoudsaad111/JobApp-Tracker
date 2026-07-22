@@ -170,24 +170,66 @@ import { APPLICATION_STATUSES, JOB_TYPES, WORK_MODES, JobType, WorkMode, ParsedJ
     </div>
   `,
   styles: [`
-    .form-wrapper { padding: 32px; max-width: 800px; }
+    .form-wrapper {
+      padding: 28px;
+      max-width: 880px;
+    }
+
     .parser-toggle {
-      width: 100%; margin-bottom: 20px; justify-content: center; gap: 8px;
-      padding: 12px; font-weight: 600;
+      width: 100%;
+      margin-bottom: 22px;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px;
+      font-weight: 700;
+      border-radius: var(--radius-sm) !important;
+      letter-spacing: 0.01em;
+      border: 1px dashed var(--border-color) !important;
+      color: var(--primary);
+      background: linear-gradient(135deg, #f5f3ff, #eef2ff) !important;
+      transition: all 0.2s ease !important;
+
+      &:hover {
+        border-style: solid !important;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm) !important;
+      }
     }
+
     .parser-section {
-      background: #f8f9fc; padding: 20px; border-radius: 10px;
-      margin-bottom: 24px; border: 1px solid var(--border);
-      h3 { margin: 0 0 6px; font-size: 1rem; font-weight: 600; }
-      p { margin: 0 0 12px; color: var(--text-secondary); font-size: .875rem; }
+      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      padding: 22px;
+      border-radius: var(--radius-md);
+      margin-bottom: 26px;
+      border: 1px solid var(--border-color);
+
+      h3 {
+        margin: 0 0 6px;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+      p {
+        margin: 0 0 14px;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+      }
     }
+
     .parser-actions {
-      display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 14px;
     }
+
     .form-actions {
-      display: flex; justify-content: flex-end; gap: 12px;
-      margin-top: 24px; padding-top: 24px;
-      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 26px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-color);
     }
   `]
 })

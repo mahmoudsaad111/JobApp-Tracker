@@ -38,7 +38,13 @@ builder.Services.AddCors(options =>
         }
     );
 });
-
+// Add Response compression for better performance
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
+    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+});
 
 var app = builder.Build();
 
@@ -48,6 +54,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseResponseCompression();
 
 app.UseStaticFiles();
 app.UseCors("AngularPolicy");

@@ -174,62 +174,73 @@ import { DocumentsService, DocumentDto } from '../../core/services/document.serv
   `,
   styles: [`
     .profile-grid {
-      display: grid; grid-template-columns: 260px 1fr;
-      gap: 16px; align-items: start;
+      display: grid; grid-template-columns: 260px 1fr; gap: 20px; align-items: start;
       @media (max-width: 768px) { grid-template-columns: 1fr; }
     }
 
     /* Avatar card */
     .avatar-card {
       padding: 32px 20px; display: flex; flex-direction: column;
-      align-items: center; gap: 8px; text-align: center; position: sticky; top: 80px;
+      align-items: center; gap: 8px; text-align: center;
+      position: sticky; top: 88px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
     }
     .big-avatar {
       width: 80px; height: 80px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary-light), var(--primary));
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
       color: white; font-size: 2rem; font-weight: 700;
-      display: flex; align-items: center; justify-content: center; margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 12px;
+      box-shadow: 0 8px 24px rgba(99,102,241,0.35);
     }
-    .user-name  { font-weight: 700; font-size: 1.1rem; }
-    .user-email { color: var(--text-secondary); font-size: .875rem; margin-bottom: 12px; }
+    .user-name  { font-weight: 700; font-size: 1.15rem; color: var(--text-primary); }
+    .user-email { color: var(--text-secondary); font-size: .875rem; margin-bottom: 16px; }
 
     /* Right column */
-    .right-col  { display: flex; flex-direction: column; gap: 16px; }
-    .form-card  { padding: 24px; h3 { font-weight: 600; margin: 0 0 4px; } }
-    .field-col  { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
-    .form-actions { display: flex; justify-content: flex-end; margin-top: 16px; }
-    .divider    { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    .right-col  { display: flex; flex-direction: column; gap: 20px; }
+    .form-card  { padding: 24px; border-radius: var(--radius-md); border: 1px solid var(--border-color);
+      h3 { font-weight: 700; margin: 0 0 6px; font-size: 1rem; color: var(--text-primary); }
+    }
+    .field-col  { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px;
+      @media (max-width: 600px) { grid-template-columns: 1fr; }
+    }
+    .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+    .divider    { border: none; border-top: 1px solid var(--border-color); margin: 24px 0; }
 
     /* Section cards */
-    .section-card { padding: 20px; }
+    .section-card { padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color); transition: box-shadow 0.2s ease, transform 0.2s ease;
+      &:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    }
     .section-header {
       display: flex; align-items: center; justify-content: space-between;
       gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
     }
     .section-title {
-      display: flex; align-items: center; gap: 8px;
-      h3 { font-weight: 600; font-size: 1rem; margin: 0; }
-      mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--primary, #6366f1); }
+      display: flex; align-items: center; gap: 10px;
+      h3 { font-weight: 700; font-size: 1rem; margin: 0; color: var(--text-primary); }
+      mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--primary); }
     }
 
     /* Badges */
     .badge {
       font-size: .72rem; font-weight: 700;
-      padding: 1px 7px; border-radius: 10px;
+      padding: 2px 8px; border-radius: 10px;
     }
     .badge--notes { background: #ede9fe; color: #6d28d9; }
     .badge--docs  { background: #dbeafe; color: #2563eb; }
 
-    /* Shared nav body (used by both Notes and Documents) */
+    /* Shared nav body */
     .nav-body {
       display: flex; align-items: center; gap: 16px;
-      background: var(--surface-2, #f8fafc);
-      border: 1px solid var(--border, #e2e8f0);
-      border-radius: 12px; padding: 16px 20px;
-      cursor: pointer; transition: box-shadow .15s, border-color .2s;
+      background: var(--bg-base);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md); padding: 16px 20px;
+      cursor: pointer; transition: all 0.2s ease;
+
       &:hover {
-        box-shadow: 0 2px 12px rgba(0,0,0,.08);
-        border-color: color-mix(in srgb, var(--primary,#6366f1) 30%, transparent);
+        box-shadow: var(--shadow-sm);
+        border-color: #c7d2fe;
+        background: linear-gradient(135deg, #f5f3ff, #eef2ff);
       }
     }
 
@@ -239,11 +250,11 @@ import { DocumentsService, DocumentDto } from '../../core/services/document.serv
       mat-icon { font-size: 22px; width: 22px; height: 22px; }
     }
     .nav-icon--notes {
-      background: color-mix(in srgb, #6366f1 10%, transparent);
-      mat-icon { color: #6366f1; }
+      background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+      mat-icon { color: #4f46e5; }
     }
     .nav-icon--docs {
-      background: color-mix(in srgb, #2563eb 10%, transparent);
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
       mat-icon { color: #2563eb; }
     }
 
@@ -258,11 +269,11 @@ import { DocumentsService, DocumentDto } from '../../core/services/document.serv
     .nav-arrow {
       flex-shrink: 0; color: var(--text-secondary);
       display: flex; align-items: center;
-      mat-icon { font-size: 20px; transition: transform .2s, color .2s; }
+      mat-icon { font-size: 20px; transition: transform 0.2s, color 0.2s; }
     }
     .nav-body:hover .nav-arrow mat-icon {
       transform: translateX(4px);
-      color: var(--primary, #6366f1);
+      color: var(--primary);
     }
 
     /* States */

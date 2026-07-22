@@ -25,12 +25,13 @@ namespace JobAppTracker.Infrastructure.Repositories
 
         public override async Task<JobApplication> GetByIdAsync(Guid id)
         {
-            var result = await _appDbContext
-                .JobApplications.Include(j => j.Interviews)
+            var result = await _appDbContext.JobApplications
+                .Include(j => j.Interviews)
                 .Include(j => j.Notes)
                 .Include(j => j.Documents)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(j => j.Id == id);
-            return result;
+            return result!;
         }
     }
 }

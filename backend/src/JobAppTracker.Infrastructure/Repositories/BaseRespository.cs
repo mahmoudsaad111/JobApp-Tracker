@@ -28,9 +28,10 @@ namespace JobAppTracker.Infrastructure.Repositories
             return entity;
         }
 
+
         public async Task<List<T>> GetAllAsync()
         {
-            List<T> entities = await _dbSet.ToListAsync();
+            List<T> entities = await _dbSet.AsNoTracking().ToListAsync();
             return entities;
         }
 

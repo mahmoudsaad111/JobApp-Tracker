@@ -18,21 +18,21 @@ namespace JobAppTracker.Infrastructure.Repositories
             _appDbContext = Context;
         }
 
-        public async Task<IEnumerable<Interview>> GetInterviewsForUserAsync(Guid UserId)
+        public async Task<IEnumerable<Interview>> GetInterviewsForUserAsync(Guid userId)
         {
-            var result = await _appDbContext
-                .Interviews.Where(i => i.UserId == UserId)
+            return await _appDbContext.Interviews
+                .AsNoTracking()
+                .Where(i => i.UserId == userId)
                 .Include(i => i.JobApplication)
                 .ToListAsync();
-            return await Task.FromResult((IEnumerable<Interview>)result);
         }
 
-        public async Task<IEnumerable<Interview>> GetInterviewsForJobAppAsync(Guid JobAppId)
+        public async Task<IEnumerable<Interview>> GetInterviewsForJobAppAsync(Guid jobAppId)
         {
-            var result = await _appDbContext
-                .Interviews.Where(i => i.JobAppId == JobAppId)
+            return await _appDbContext.Interviews
+                .AsNoTracking()
+                .Where(i => i.JobAppId == jobAppId)
                 .ToListAsync();
-            return await Task.FromResult((IEnumerable<Interview>)result);
         }
     }
 }
