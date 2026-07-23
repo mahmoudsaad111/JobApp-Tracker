@@ -65,8 +65,8 @@ export class ApplicationsService {
   }
 
   // ─── Parse Job Posting ───────────────────────────────────────────────────────
-  parseJobPosting(body: ParseJobPostingRequest): Observable<ParsedJobPosting> {
-    return this.http.post<ParsedJobPosting>(`${this.parseBase}/parse`, body);
+  parseJobPosting(body: ParseJobPostingRequest): Observable<ApiResponse<ParsedJobPosting>> {
+    return this.http.post<ApiResponse<ParsedJobPosting>>(`${this.parseBase}/parse`, body);
   }
 
   // ─── Resume Match ────────────────────────────────────────────────────────────
