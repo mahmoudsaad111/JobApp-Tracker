@@ -216,6 +216,8 @@ import { APPLICATION_STATUSES, JOB_TYPES, WORK_MODES, JobType, WorkMode, ParsedJ
       }
     }
 
+    .parser-section .full-width { width: 100%; }
+
     .parser-actions {
       display: flex;
       justify-content: flex-end;
@@ -269,13 +271,15 @@ export class ApplicationFormComponent implements OnInit {
     if (!this.rawJobText.trim()) return;
     this.parsing = true;
     this.svc.parseJobPosting({ rawText: this.rawJobText }).subscribe({
-      next: (parsed) => {
-        this.applyParsedData(parsed);
+      next: (res) => {
+        console.log('API response:', JSON.stringify(res));
+        this.applyParsedData(res.data);
         this.parsing = false;
         this.showParser = false;
         this.notify.success('Job posting parsed successfully');
       },
-      error: () => {
+      error: (err) => {
+        console.error('Parse error:', err);
         this.parsing = false;
         this.notify.error('Failed to parse job posting');
       }
@@ -283,22 +287,42 @@ export class ApplicationFormComponent implements OnInit {
   }
 
   private applyParsedData(parsed: ParsedJobPosting): void {
-    const patch: Record<string, unknown> = {};
-    if (parsed.companyName) patch['CompanyName'] = parsed.companyName;
-    if (parsed.jobTitle) patch['Title'] = parsed.jobTitle;
-    if (parsed.location) patch['Location'] = parsed.location;
+    console.log('applyParsedData received:', JSON.stringify(parsed));
+    if (!parsed) {
+      console.warn('parsed is null/undefined');
+      return;
+    }
+    const patch: Partial<Record<string, unknown>> = {};
+    if (parsed.companyName) {
+      console.log('setting CompanyName to:', parsed.companyName);
+      patch['CompanyName'] = parsed.companyName;
+    }
+    if (parsed.jobTitle) {
+      console.log('setting Title to:', parsed.jobTitle);
+      patch['Title'] = parsed.jobTitle;
+    }
+    if (parsed.location) {
+      console.log('setting Location to:', parsed.location);
+      patch['Location'] = parsed.location;
+    }
     if (parsed.requiredSkills?.length) {
-      patch['RequiredSkills'] = parsed.requiredSkills.join(', ');
+      const skills = parsed.requiredSkills.join(', ');
+      console.log('setting RequiredSkills to:', skills);
+      patch['RequiredSkills'] = skills;
     }
 
     const workModeValues: WorkMode[] = ['Onsite', 'Remote', 'Hybrid'];
     if (parsed.jobType && workModeValues.includes(parsed.jobType as WorkMode)) {
+      console.log('setting WorkMode to:', parsed.jobType);
       patch['WorkMode'] = parsed.jobType as WorkMode;
     } else if (parsed.jobType && JOB_TYPES.includes(parsed.jobType as JobType)) {
+      console.log('setting Type to:', parsed.jobType);
       patch['Type'] = parsed.jobType as JobType;
     }
 
+    console.log('patch object:', JSON.stringify(patch));
     this.form.patchValue(patch);
+    console.log('form value after patch:', JSON.stringify(this.form.value));
   }
 
   ngOnInit(): void {
