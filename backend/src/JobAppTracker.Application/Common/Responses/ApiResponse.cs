@@ -14,6 +14,8 @@ namespace JobAppTracker.Application.Common.Responses
 
         public List<string>? Errors { get; set; }
 
+        public int? Total { get; set; }
+
         public static ApiResponse<T> SuccessResult(T data, string message = "Success")
         {
             return new ApiResponse<T>

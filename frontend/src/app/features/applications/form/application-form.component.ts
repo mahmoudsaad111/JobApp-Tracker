@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, Input } from '@angular/core';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -23,15 +24,21 @@ import { APPLICATION_STATUSES, JOB_TYPES, WORK_MODES, JobType, WorkMode, ParsedJ
     MatDatepickerModule, MatButtonModule, MatIconModule,
     MatProgressSpinnerModule, MatCardModule
   ],
+  animations: [
+    trigger('pageIn', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(10px)' }),
+        animate('280ms cubic-bezier(0.16,1,0.3,1)', style({ opacity: 1, transform: 'translateY(0)' })),
+      ]),
+    ]),
+  ],
   template: `
-    <div class="page-container">
-      <div class="page-header">
-        <div style="display:flex;align-items:center;gap:12px">
-          <a mat-icon-button routerLink="/applications">
-            <mat-icon>arrow_back</mat-icon>
-          </a>
-          <h1>{{ isEdit ? 'Edit Application' : 'New Application' }}</h1>
-        </div>
+    <div class="page-container" @pageIn>
+      <div class="flex items-center gap-3 mb-6">
+        <a mat-icon-button routerLink="/applications">
+          <mat-icon>arrow_back</mat-icon>
+        </a>
+        <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent">{{ isEdit ? 'Edit Application' : 'New Application' }}</h1>
       </div>
 
       <div class="app-card form-wrapper">
@@ -153,7 +160,7 @@ import { APPLICATION_STATUSES, JOB_TYPES, WORK_MODES, JobType, WorkMode, ParsedJ
                 <mat-label>Description (optional)</mat-label>
                 <textarea matInput formControlName="Description" rows="4"
                   placeholder="Recruiter contact, salary expectations, preparation Description…"></textarea>
-                <mat-icon matPrefix>Description</mat-icon>
+                <mat-icon matPrefix>description</mat-icon>
               </mat-form-field>
             </div>
 
@@ -186,7 +193,7 @@ import { APPLICATION_STATUSES, JOB_TYPES, WORK_MODES, JobType, WorkMode, ParsedJ
       letter-spacing: 0.01em;
       border: 1px dashed var(--border-color) !important;
       color: var(--primary);
-      background: linear-gradient(135deg, #f5f3ff, #eef2ff) !important;
+      background: var(--bg-surface) !important;
       transition: all 0.2s ease !important;
 
       &:hover {
@@ -197,11 +204,12 @@ import { APPLICATION_STATUSES, JOB_TYPES, WORK_MODES, JobType, WorkMode, ParsedJ
     }
 
     .parser-section {
-      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      background: var(--bg-surface);
       padding: 22px;
       border-radius: var(--radius-md);
       margin-bottom: 26px;
       border: 1px solid var(--border-color);
+      animation: scaleIn 0.25s cubic-bezier(0.16,1,0.3,1);
 
       h3 {
         margin: 0 0 6px;

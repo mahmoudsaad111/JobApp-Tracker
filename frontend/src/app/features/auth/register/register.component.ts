@@ -126,6 +126,16 @@ function passwordMatch(g: AbstractControl) {
       .subtitle { color: #6b7280; margin: 4px 0 24px; font-size: .9rem; }
     }
     form { display: flex; flex-direction: column; gap: 4px; }
+    mat-icon[matPrefix] {
+      color: #94a3b8;
+      margin-right: 4px;
+    }
+    .mat-mdc-form-field:focus-within mat-icon[matPrefix] {
+      color: #6366f1;
+    }
+    button[matSuffix] mat-icon {
+      color: #94a3b8;
+    }
     .submit-btn {
       margin-top: 8px; height: 48px; font-size: 1rem; font-weight: 600;
       border-radius: 10px !important;
@@ -135,10 +145,38 @@ function passwordMatch(g: AbstractControl) {
       display: flex; align-items: center; gap: 8px;
       background: #fee2e2; color: #991b1b;
       padding: 10px 14px; border-radius: 8px; font-size: .875rem;
+      animation: shake 0.4s ease;
     }
     .switch-link {
       text-align: center; margin-top: 20px; color: #6b7280; font-size: .875rem;
       a { color: #3949ab; font-weight: 600; text-decoration: none; }
+    }
+
+    /* ── Registration success state ── */
+    .success-state {
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      padding: 8px 0 4px;
+      animation: scaleIn 0.35s cubic-bezier(0.16,1,0.3,1);
+    }
+    .success-icon {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 18px;
+      box-shadow: 0 8px 24px -6px rgba(16,185,129,.4);
+      mat-icon { font-size: 34px; width: 34px; height: 34px; color: #059669; }
+    }
+    .success-state h2 { font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+    .success-state .subtitle {
+      color: #64748b; font-size: .9rem; line-height: 1.6; margin: 0 0 6px;
+      strong { color: #0f172a; }
+    }
+    .success-state .hint {
+      color: #94a3b8; font-size: .8rem; margin: 0 0 24px;
+    }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.94); }
+      to   { opacity: 1; transform: scale(1); }
     }
   `]
 })

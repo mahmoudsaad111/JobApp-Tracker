@@ -42,6 +42,8 @@ namespace JobAppTracker.Application.Features.JobApp.Handlers
                 workMode: request.WorkMode ?? WorkMode.Onsite,
                 status: request.Status
             );
+            if (request.RequiredSkills is not null)
+                jobApplication.SetRequiredSkills(request.RequiredSkills);
 
             var result = await _jobAppRepository.AddAsync(jobApplication);
             if (result is null)

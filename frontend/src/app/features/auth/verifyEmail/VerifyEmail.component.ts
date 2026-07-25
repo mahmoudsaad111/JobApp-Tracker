@@ -46,10 +46,12 @@ import { AuthService } from '../../../core/services/auth.service';
     .verify-wrapper {
       display: flex; flex-direction: column;
       align-items: center; text-align: center; gap: 16px;
+      animation: fadeIn 0.35s ease;
     }
     .icon-circle {
       width: 72px; height: 72px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
+      animation: scaleIn 0.4s cubic-bezier(0.16,1,0.3,1);
       mat-icon { font-size: 36px; width: 36px; height: 36px; }
       &.success { background: #dcfce7; mat-icon { color: #16a34a; } }
       &.error   { background: #fee2e2; mat-icon { color: #dc2626; } }

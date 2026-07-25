@@ -95,6 +95,19 @@ import { NotificationService } from '../../../core/services/notification.service
       gap: 6px;
     }
 
+    /* matPrefix/matSuffix icons don't reliably inherit a visible color from
+       Material's theme tokens — set it explicitly so they're never washed out. */
+    mat-icon[matPrefix] {
+      color: #94a3b8;
+      margin-right: 4px;
+    }
+    .mat-mdc-form-field:focus-within mat-icon[matPrefix] {
+      color: #6366f1;
+    }
+    button[matSuffix] mat-icon {
+      color: #94a3b8;
+    }
+
     .forgot-row {
       display: flex;
       justify-content: flex-end;
@@ -144,6 +157,7 @@ import { NotificationService } from '../../../core/services/notification.service
       font-size: 0.875rem;
       border: 1px solid #fecaca;
       font-weight: 500;
+      animation: shake 0.4s ease;
 
       mat-icon {
         font-size: 18px;

@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, OnDestroy, signal, computed, ElementRef, ViewChild } from '@angular/core';
+import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { CommonModule }             from '@angular/common';
 import { FormsModule }              from '@angular/forms';
 import { MatIconModule }            from '@angular/material/icon';
@@ -58,6 +59,22 @@ const TOOLBAR: ToolbarAction[] = [
     MatIconModule, MatButtonModule,
     MatTooltipModule, MatProgressSpinnerModule,
   ],
+  animations: [
+    trigger('noteListStagger', [
+      transition('* => *', [
+        query(':enter', [
+          style({ opacity: 0, transform: 'translateY(8px)' }),
+          stagger(25, animate('220ms cubic-bezier(0.16,1,0.3,1)', style({ opacity: 1, transform: 'translateY(0)' }))),
+        ], { optional: true }),
+      ]),
+    ]),
+    trigger('editorSwap', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(6px)' }),
+        animate('220ms cubic-bezier(0.16,1,0.3,1)', style({ opacity: 1, transform: 'translateY(0)' })),
+      ]),
+    ]),
+  ],
   template: `
 <div class="notes-shell">
 
@@ -106,7 +123,7 @@ const TOOLBAR: ToolbarAction[] = [
         }
       </div>
     } @else {
-      <div class="note-list">
+      <div class="note-list" [@noteListStagger]="filteredNotes().length">
         @for (note of filteredNotes(); track note.noteId) {
           <button class="note-item"
                   [class.note-item--active]="activeNote()?.noteId === note.noteId"
@@ -140,6 +157,7 @@ const TOOLBAR: ToolbarAction[] = [
 
     } @else {
 
+      <div class="editor-shell" @editorSwap>
       <!-- Toolbar bar — styled like filters-card -->
       <div class="editor-topbar">
         <div class="editor-toolbar">
@@ -226,13 +244,14 @@ const TOOLBAR: ToolbarAction[] = [
         }
         <span>{{ editorContent.length }} chars</span>
       </div>
+      </div>
     }
   </main>
 
 </div>
   `,
   styles: [`
-    :host { display:block; height:calc(100vh - 64px); }
+    :host { display:block; height:100%; }
 
     .notes-shell {
       display:flex; height:100%;
@@ -272,11 +291,13 @@ const TOOLBAR: ToolbarAction[] = [
     .sidebar-new-wrap { padding:8px 8px 4px; }
     .sidebar-new-btn {
       display:flex; align-items:center; justify-content:center; gap:5px; width:100%;
-      background:var(--primary,#6366f1); color:#fff; border:none;
+      background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none;
       border-radius:8px; padding:8px 10px; font-size:.82rem; font-weight:700;
-      cursor:pointer; transition:opacity .15s; white-space:nowrap; overflow:hidden;
+      cursor:pointer; transition:transform .15s ease, box-shadow .15s ease; white-space:nowrap; overflow:hidden;
+      box-shadow:0 4px 12px -3px rgba(99,102,241,.45);
       mat-icon { font-size:18px; flex-shrink:0; }
-      &:hover { opacity:.88; }
+      &:hover { box-shadow:0 6px 16px -3px rgba(99,102,241,.55); transform:translateY(-1px); }
+      &:active { transform:scale(0.97); }
     }
 
     .sidebar-search {
@@ -296,10 +317,10 @@ const TOOLBAR: ToolbarAction[] = [
       mat-icon { font-size:13px; }
     }
 
-    .sidebar-loading { display:flex; justify-content:center; padding:24px; }
+    .sidebar-loading { display:flex; flex:1; align-items:center; justify-content:center; }
     .sidebar-empty {
-      display:flex; flex-direction:column; align-items:center;
-      padding:24px 12px; color:var(--text-secondary); text-align:center; gap:6px;
+      display:flex; flex:1; flex-direction:column; align-items:center; justify-content:center;
+      padding:24px 12px 60px; color:var(--text-secondary); text-align:center; gap:6px;
       mat-icon { font-size:30px; opacity:.25; }
       p { font-size:.78rem; margin:0; }
     }
@@ -307,10 +328,12 @@ const TOOLBAR: ToolbarAction[] = [
     .note-list { flex:1; overflow-y:auto; padding:3px 5px 10px; }
     .note-item {
       width:100%; background:none; border:none; cursor:pointer;
-      border-radius:8px; padding:0; margin-bottom:2px; text-align:left; transition:background .12s;
-      &:hover { background:var(--surface-2,#f1f5f9); }
+      border-radius:8px; padding:0; margin-bottom:2px; text-align:left;
+      border-left:3px solid transparent;
+      transition:background .12s, border-color .12s, transform .12s;
+      &:hover { background:var(--surface-2,#f1f5f9); transform:translateX(1px); }
     }
-    .note-item--active { background:color-mix(in srgb,var(--primary,#6366f1) 10%,transparent)!important; }
+    .note-item--active { background:color-mix(in srgb,var(--primary,#6366f1) 10%,transparent)!important; border-left-color:var(--primary,#6366f1); }
     .note-item-inner { padding:9px 10px; }
     .note-item-title {
       font-size:.82rem; font-weight:700; color:var(--text-primary);
@@ -322,6 +345,7 @@ const TOOLBAR: ToolbarAction[] = [
 
     /* ── EDITOR ── */
     .notes-main { flex:1; display:flex; flex-direction:column; min-width:0; overflow:hidden; }
+    .editor-shell { flex:1; display:flex; flex-direction:column; min-height:0; }
 
     /* Welcome state — matches dashboard empty-recent */
     .notes-welcome {
@@ -333,11 +357,13 @@ const TOOLBAR: ToolbarAction[] = [
     }
     .welcome-new-btn {
       display:inline-flex; align-items:center; gap:6px; margin-top:6px;
-      background:var(--primary,#6366f1); color:#fff; border:none;
+      background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none;
       border-radius:10px; padding:10px 20px; font-size:.875rem; font-weight:700;
-      cursor:pointer; transition:opacity .15s;
+      cursor:pointer; transition:transform .15s ease, box-shadow .15s ease;
+      box-shadow:0 4px 12px -3px rgba(99,102,241,.4);
       mat-icon { font-size:18px; }
-      &:hover { opacity:.88; }
+      &:hover { box-shadow:0 6px 16px -3px rgba(99,102,241,.5); transform:translateY(-1px); }
+      &:active { transform:scale(0.96); }
     }
 
     /* Toolbar — same surface/border pattern as filters-card */
@@ -351,9 +377,10 @@ const TOOLBAR: ToolbarAction[] = [
       background:none; border:none; cursor:pointer; border-radius:6px;
       padding:5px; color:var(--text-secondary);
       display:flex; align-items:center; justify-content:center;
-      transition:background .12s, color .12s;
+      transition:background .12s, color .12s, transform .12s;
       mat-icon { font-size:16px; width:16px; height:16px; }
-      &:hover { background:var(--surface-2,#f1f5f9); color:var(--primary,#6366f1); }
+      &:hover { background:var(--surface-2,#f1f5f9); color:var(--primary,#6366f1); transform:scale(1.1); }
+      &:active { transform:scale(0.92); }
     }
     .editor-actions { display:flex; align-items:center; gap:7px; }
 
@@ -367,19 +394,21 @@ const TOOLBAR: ToolbarAction[] = [
       mat-icon { font-size:16px; }
       &:hover { background:var(--surface-2,#f1f5f9); }
     }
-    .view-btn--active { background:var(--primary,#6366f1)!important; color:#fff!important; }
+    .view-btn--active { background:linear-gradient(135deg,#6366f1,#8b5cf6)!important; color:#fff!important; }
 
     .word-count { font-size:.72rem; white-space:nowrap; }
 
     /* Save — matches action-btn--primary */
     .save-btn {
       display:inline-flex; align-items:center; gap:5px;
-      background:var(--primary,#6366f1); color:#fff; border:none;
+      background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none;
       border-radius:8px; padding:6px 14px; font-size:.8rem; font-weight:700;
-      cursor:pointer; transition:opacity .15s;
+      cursor:pointer; transition:transform .15s ease, box-shadow .15s ease;
+      box-shadow:0 4px 12px -3px rgba(99,102,241,.4);
       mat-icon { font-size:15px; }
-      &:disabled { opacity:.5; cursor:default; }
-      &:not(:disabled):hover { opacity:.88; }
+      &:disabled { opacity:.5; cursor:default; box-shadow:none; }
+      &:not(:disabled):hover { box-shadow:0 6px 16px -3px rgba(99,102,241,.5); transform:translateY(-1px); }
+      &:not(:disabled):active { transform:scale(0.96); }
     }
 
     /* Delete — matches action-btn--ghost / row-actions delete pattern */

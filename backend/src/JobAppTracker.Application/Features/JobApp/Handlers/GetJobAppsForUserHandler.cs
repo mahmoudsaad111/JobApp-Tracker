@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text;
 using JobAppTracker.Application.Common.Interfaces;
+using JobAppTracker.Application.Common.Responses;
 using JobAppTracker.Application.Features.JobApp.Dtos;
 using JobAppTracker.Application.Features.JobApp.Queries;
 using JobAppTracker.Application.Interfaces.Repositories;
@@ -17,7 +18,7 @@ using Microsoft.EntityFrameworkCore;
 namespace JobAppTracker.Application.Features.JobApp.Handlers
 {
     public class GetJobAppsForUserHandler
-        : IRequestHandler<GetJobAppsForUserQuery, List<GetJobAppForUserDto>>
+        : IRequestHandler<GetJobAppsForUserQuery, ApiResponse<List<GetJobAppForUserDto>>>
     {
         private readonly IJobAppRepository _jobAppRepository;
         private readonly ICurrentUserService _currentUserService;
@@ -31,19 +32,15 @@ namespace JobAppTracker.Application.Features.JobApp.Handlers
             _currentUserService = currentUserService;
         }
 
-        public async Task<List<GetJobAppForUserDto>> Handle(
+        public async Task<ApiResponse<List<GetJobAppForUserDto>>> Handle(
             GetJobAppsForUserQuery request,
             CancellationToken cancellationToken
         )
         {
             request.UserId = _currentUserService.UserId;
 
-            // Get the job applications for the user from the repository
             IQueryable<JobApplication> result = _jobAppRepository.GetJobAppsForUser(request.UserId);
 
-            // Apply filters based on the request parameters
-
-            // If Search is provided, filter by CompanyName or Title containing the search term (case-insensitive)
             if (!string.IsNullOrEmpty(request.Search))
             {
                 var pattern = $"%{request.Search}%";
@@ -67,21 +64,23 @@ namespace JobAppTracker.Application.Features.JobApp.Handlers
                 result = result.Where(j => j.AppliedAt <= request.ToDate.Value);
             }
 
+            var total = await result.CountAsync(cancellationToken);
+
             if (request.SortBy != null)
             {
                 result = request.SortBy switch
                 {
-                    JobAppSortBy.CompanyName => result.OrderBy(j => j.CompanyName),
-                    JobAppSortBy.Title => result.OrderBy(j => j.Title),
-                    JobAppSortBy.AppliedAt => result.OrderBy(j => j.AppliedAt),
-                    JobAppSortBy.Status => result.OrderBy(j => j.Status),
-                    JobAppSortBy.WorkMode => result.OrderBy(j => j.WorkMode),
+                    JobAppSortBy.CompanyName => request.SortDir == "desc" ? result.OrderByDescending(j => j.CompanyName) : result.OrderBy(j => j.CompanyName),
+                    JobAppSortBy.Title => request.SortDir == "desc" ? result.OrderByDescending(j => j.Title) : result.OrderBy(j => j.Title),
+                    JobAppSortBy.AppliedAt => request.SortDir == "desc" ? result.OrderByDescending(j => j.AppliedAt) : result.OrderBy(j => j.AppliedAt),
+                    JobAppSortBy.Status => request.SortDir == "desc" ? result.OrderByDescending(j => j.Status) : result.OrderBy(j => j.Status),
+                    JobAppSortBy.WorkMode => request.SortDir == "desc" ? result.OrderByDescending(j => j.WorkMode) : result.OrderBy(j => j.WorkMode),
                     _ => result,
                 };
             }
             else
             {
-                result = result.OrderBy(j => j.AppliedAt);
+                result = result.OrderByDescending(j => j.AppliedAt);
             }
             if (request.Page > 0 && request.PageSize > 0)
             {
@@ -89,7 +88,14 @@ namespace JobAppTracker.Application.Features.JobApp.Handlers
             }
 
             var jobApps = await result.ToListAsync(cancellationToken);
-            return JobAppMapper.ToGetJobAppForUserDto(jobApps).ToList();
+            var data = JobAppMapper.ToGetJobAppForUserDto(jobApps).ToList();
+
+            var response = ApiResponse<List<GetJobAppForUserDto>>.SuccessResult(
+                data,
+                "JobApps Retrieved Successfully"
+            );
+            response.Total = total;
+            return response;
         }
     }
 }

@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -10,6 +11,8 @@ import { ChartConfiguration, ChartData, Plugin } from 'chart.js';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { AuthService } from '../../core/services/auth.service';
 import { DashboardSummary } from '../../core/models';
+import { CountUpDirective } from '../../shared/directives/count-up.directive';
+import { MagneticDirective } from '../../shared/directives/magnetic.directive';
 
 function statusKey(s: string): string {
   return s.toLowerCase().replace(/\s+/g, '');
@@ -20,17 +23,47 @@ function statusKey(s: string): string {
   standalone: true,
   imports: [
     CommonModule, RouterLink, MatIconModule, MatButtonModule,
-    MatProgressSpinnerModule, MatCardModule, NgChartsModule
+    MatProgressSpinnerModule, MatCardModule, NgChartsModule, CountUpDirective, MagneticDirective
+  ],
+  animations: [
+    trigger('pageIn', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(10px)' }),
+        animate('280ms cubic-bezier(0.16,1,0.3,1)', style({ opacity: 1, transform: 'translateY(0)' })),
+      ]),
+    ]),
+    trigger('statStagger', [
+      transition(':enter', [
+        query('.stat-card', [
+          style({ opacity: 0, transform: 'translateY(14px) scale(0.96)' }),
+          stagger(50, animate('320ms cubic-bezier(0.16,1,0.3,1)', style({ opacity: 1, transform: 'translateY(0) scale(1)' }))),
+        ], { optional: true }),
+      ]),
+    ]),
+    trigger('fadeInUp', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(10px)' }),
+        animate('320ms cubic-bezier(0.16,1,0.3,1)', style({ opacity: 1, transform: 'translateY(0)' })),
+      ]),
+    ]),
+    trigger('listStagger', [
+      transition(':enter', [
+        query('.recent-item', [
+          style({ opacity: 0, transform: 'translateX(-8px)' }),
+          stagger(40, animate('260ms cubic-bezier(0.16,1,0.3,1)', style({ opacity: 1, transform: 'translateX(0)' }))),
+        ], { optional: true }),
+      ]),
+    ]),
   ],
   template: `
-    <div class="page-container">
+    <div class="page-container" @pageIn>
       <!-- Header -->
-      <div class="page-header">
+      <div class="flex items-center justify-between gap-4 flex-wrap mb-6">
         <div>
-          <h1>Dashboard</h1>
-          <p class="text-muted">Welcome back, {{ auth.userName() }}!</p>
+          <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent">Dashboard</h1>
+          <p class="text-slate-500 text-sm mt-1 font-medium">Welcome back, {{ auth.userName() }}!</p>
         </div>
-        <a mat-flat-button color="primary" routerLink="/applications/new">
+        <a mat-flat-button color="primary" routerLink="/applications/new" magnetic>
           <mat-icon>add</mat-icon> Add Application
         </a>
       </div>
@@ -42,60 +75,60 @@ function statusKey(s: string): string {
       } @else if (summary) {
 
         <!-- Stat Cards -->
-        <div class="stat-grid">
+        <div class="stat-grid" @statStagger>
           <div class="stat-card total">
             <div class="stat-icon"><mat-icon>work</mat-icon></div>
             <div class="stat-info">
-              <div class="stat-value">{{ summary.totalApplications }}</div>
+              <div class="stat-value"><span [countUp]="summary.totalApplications"></span></div>
               <div class="stat-label">Total</div>
             </div>
           </div>
           <div class="stat-card applied">
             <div class="stat-icon"><mat-icon>send</mat-icon></div>
             <div class="stat-info">
-              <div class="stat-value">{{ summary.byStatus.applied }}</div>
+              <div class="stat-value"><span [countUp]="summary.byStatus.applied"></span></div>
               <div class="stat-label">Applied</div>
             </div>
           </div>
           <div class="stat-card interview">
             <div class="stat-icon"><mat-icon>event_available</mat-icon></div>
             <div class="stat-info">
-              <div class="stat-value">{{ summary.byStatus.interviewing }}</div>
+              <div class="stat-value"><span [countUp]="summary.byStatus.interviewing"></span></div>
               <div class="stat-label">Interviewing</div>
             </div>
           </div>
           <div class="stat-card offer">
             <div class="stat-icon"><mat-icon>check_circle</mat-icon></div>
             <div class="stat-info">
-              <div class="stat-value">{{ summary.byStatus.offered }}</div>
+              <div class="stat-value"><span [countUp]="summary.byStatus.offered"></span></div>
               <div class="stat-label">Offered</div>
             </div>
           </div>
           <div class="stat-card rejected">
             <div class="stat-icon"><mat-icon>cancel</mat-icon></div>
             <div class="stat-info">
-              <div class="stat-value">{{ summary.byStatus.rejected }}</div>
+              <div class="stat-value"><span [countUp]="summary.byStatus.rejected"></span></div>
               <div class="stat-label">Rejected</div>
             </div>
           </div>
           <div class="stat-card week">
             <div class="stat-icon"><mat-icon>calendar_today</mat-icon></div>
             <div class="stat-info">
-              <div class="stat-value">{{ summary.thisWeekApplications }}</div>
+              <div class="stat-value"><span [countUp]="summary.thisWeekApplications"></span></div>
               <div class="stat-label">This Week</div>
             </div>
           </div>
           <div class="stat-card rate">
             <div class="stat-icon"><mat-icon>trending_up</mat-icon></div>
             <div class="stat-info">
-              <div class="stat-value">{{ responseRate }}%</div>
+              <div class="stat-value"><span [countUp]="responseRate" countUpSuffix="%"></span></div>
               <div class="stat-label">Response Rate</div>
             </div>
           </div>
         </div>
 
         <!-- Charts Row -->
-        <div class="charts-grid">
+        <div class="charts-grid" @fadeInUp>
 
           <!-- Status Distribution -->
           <div class="app-card chart-card">
@@ -136,23 +169,23 @@ function statusKey(s: string): string {
                 <p>No upcoming interviews</p>
               </div>
             } @else {
-              <div class="recent-list">
-                @for (interview of summary.upcomingInterviews; track interview.id) {
-                  <div class="recent-item">
-                    <div class="company-avatar">{{ interview.company[0] }}</div>
-                    <div class="app-info">
-                      <div class="app-title">{{ interview.position }}</div>
-                      <div class="app-company">{{ interview.company }}</div>
-                    </div>
-                    <div class="app-date">
-                      <div>{{ interview.interviewDate | date:'MMM d, y' }}</div>
-                      <span class="status-chip status--interviewscheduled">
-                        {{ interview.interviewType }}
-                      </span>
-                    </div>
-                  </div>
-                }
-              </div>
+               <div class="recent-list" @listStagger>
+                 @for (interview of summary.upcomingInterviews; track interview.id) {
+                   <div class="recent-item" (click)="openInterview(interview.id)">
+                     <div class="company-avatar">{{ interview.company[0] }}</div>
+                     <div class="app-info">
+                       <div class="app-title">{{ interview.position }}</div>
+                       <div class="app-company">{{ interview.company }}</div>
+                     </div>
+                     <div class="app-date">
+                       <div>{{ interview.interviewDate | date:'MMM d, y' }}</div>
+                       <span class="status-chip status--interviewscheduled">
+                         {{ interview.interviewType }}
+                       </span>
+                     </div>
+                   </div>
+                 }
+               </div>
             }
           </div>
         </div>
@@ -169,7 +202,7 @@ function statusKey(s: string): string {
               <p>No applications yet. <a routerLink="/applications/new">Add your first one!</a></p>
             </div>
           } @else {
-            <div class="recent-list">
+            <div class="recent-list" @listStagger>
               @for (app of summary.recentApplications; track app.jobAppId) {
                 <a class="recent-item" [routerLink]="['/applications', app.jobAppId]">
                   <div class="company-avatar">{{ app.company[0] }}</div>
@@ -253,7 +286,7 @@ function statusKey(s: string): string {
       text-decoration: none; color: inherit;
 
       &:hover {
-        background: #f8fafc;
+        background: var(--surface-2,#f8fafc);
       }
     }
     .company-avatar {
@@ -302,10 +335,23 @@ function statusKey(s: string): string {
     .status--applied      { background: #eff6ff; color: #1d4ed8; border-color: #dbeafe; }
     .status--interviewing { background: #eef2ff; color: #4338ca; border-color: #e0e7ff; }
     .status--offered      { background: #ecfdf5; color: #047857; border-color: #d1fae5; }
+
+    :host-context(.dark) .status--draft              { background: #334155; color: #f1f5f9; border-color: #475569; }
+    :host-context(.dark) .status--submitted          { background: #1e3a5f; color: #93c5fd; border-color: #3b82f6; }
+    :host-context(.dark) .status--underreview        { background: #78350f; color: #fcd34d; border-color: #b45309; }
+    :host-context(.dark) .status--interviewscheduled { background: #312e81; color: #a5b4fc; border-color: #4f46e5; }
+    :host-context(.dark) .status--interviewed        { background: #4c1d95; color: #ddd6fe; border-color: #7c3aed; }
+    :host-context(.dark) .status--accepted           { background: #064e3b; color: #6ee7b7; border-color: #059669; }
+    :host-context(.dark) .status--rejected           { background: #7f1d1d; color: #fca5a5; border-color: #dc2626; }
+    :host-context(.dark) .status--withdrawn          { background: #831843; color: #f9a8d4; border-color: #db2777; }
+    :host-context(.dark) .status--applied      { background: #1e3a5f; color: #93c5fd; border-color: #3b82f6; }
+    :host-context(.dark) .status--interviewing { background: #312e81; color: #a5b4fc; border-color: #4f46e5; }
+    :host-context(.dark) .status--offered      { background: #064e3b; color: #6ee7b7; border-color: #059669; }
   `]
 })
 export class DashboardComponent implements OnInit {
   private dashService = inject(DashboardService);
+  private router     = inject(Router);
   auth                = inject(AuthService);
 
   summary: DashboardSummary | null = null;
@@ -393,6 +439,10 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void { this.loadDashboard(); }
+
+  openInterview(id: number | string): void {
+    this.router.navigate(['/interviews'], { queryParams: { id } });
+  }
 
   private loadDashboard(): void {
     this.dashService.getSummary().subscribe({

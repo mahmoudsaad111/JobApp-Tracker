@@ -25,7 +25,9 @@ export class ApplicationsService {
   private parseBase = `${environment.apiUrl}/job-postings`;
 
   // ─── List (paged + filtered) ─────────────────────────────────────────────────
-  getAll(query: PagedQuery = {}): Observable<PagedResponse<JobApplication>> {
+  // NOTE: the backend returns ApiResponse<List<T>> with `total` as a top-level
+  // sibling field (not ApiResponse<PagedResponse<T>> with a nested .data/.total).
+  getAll(query: PagedQuery = {}): Observable<ApiResponse<JobApplication[]>> {
     let params = new HttpParams();
     if (query.page)     params = params.set('Page',     query.page);
     if (query.pageSize) params = params.set('PageSize', query.pageSize);
@@ -35,8 +37,8 @@ export class ApplicationsService {
     if (query.fromDate) params = params.set('FromDate',   query.fromDate.toISOString());
     if (query.toDate)   params = params.set('ToDate',   query.toDate.toISOString());
 
-    //if (query.sortDir)  params = params.set('sortDir',  query.sortDir);
-    return this.http.get<PagedResponse<JobApplication>>(this.base, { params });
+    if (query.sortDir)  params = params.set('SortDir',  query.sortDir);
+    return this.http.get<ApiResponse<JobApplication[]>>(this.base, { params });
   }
 
   // ─── Single ──────────────────────────────────────────────────────────────────
