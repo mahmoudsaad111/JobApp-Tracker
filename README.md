@@ -39,6 +39,12 @@ Built with **ASP.NET Core 10** REST API and **Angular 21** frontend, secured wit
  ### 📄 Documents Management - 
  -   Upload and save CVs, Resumes, and Cover Letters  
   -   Store preparation materials per interview 
+
+### 🤖 AI-Powered Job Search Assistant
+- **Job Posting Parser** — Paste a job posting URL or raw text and let AI extract the company name, job title, location, work mode, and key requirements, then auto-fill the "Add Application" form so you don't have to copy details in by hand.
+- **Resume Matching** — Compare your uploaded resume/CV against a saved job posting and get an AI-generated match score, plus a clear breakdown of the skills and keywords you already cover and the gaps worth addressing before you apply.
+- **Cover Letter Generator** — Generate a tailored, ready-to-send cover letter by combining your resume with the specific job posting's requirements, tone, and language — then edit and download it in one place.
+
  ### 📊 Dashboard & Statistics 
  -   Overview of all applications and their statuses - 
   -  Summary statistics: 
@@ -260,7 +266,6 @@ JobAppTracker/
 ## 🔮 Future Enhancements
 - 🔔 Interview reminders & notifications
 - 📊 Advanced job search analytics
-- 🤖 AI-assisted job search tools
 - 🧩 Browser extension for quick application adding
 
 ---
