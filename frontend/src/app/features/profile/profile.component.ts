@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -21,9 +22,22 @@ import { DocumentsService, DocumentDto } from '../../core/services/document.serv
     MatButtonModule, MatIconModule, MatFormFieldModule,
     MatInputModule, MatProgressSpinnerModule, MatTooltipModule,
   ],
+  animations: [
+    trigger('pageIn', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(10px)' }),
+        animate('280ms cubic-bezier(0.16,1,0.3,1)', style({ opacity: 1, transform: 'translateY(0)' })),
+      ]),
+    ]),
+  ],
   template: `
-    <div class="page-container">
-      <div class="page-header"><h1>Profile</h1></div>
+    <div class="page-container" @pageIn>
+      <div class="flex items-center justify-between gap-4 flex-wrap mb-6">
+        <div>
+          <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent">Profile</h1>
+          <p class="text-slate-500 text-sm mt-1 font-medium">Manage your account, notes, and documents</p>
+        </div>
+      </div>
 
       <div class="profile-grid">
 
@@ -192,6 +206,9 @@ import { DocumentsService, DocumentDto } from '../../core/services/document.serv
       color: white; font-size: 2rem; font-weight: 700;
       display: flex; align-items: center; justify-content: center; margin-bottom: 12px;
       box-shadow: 0 8px 24px rgba(99,102,241,0.35);
+      transition: transform .2s ease, box-shadow .2s ease;
+      cursor: default;
+      &:hover { transform: scale(1.05); box-shadow: 0 10px 28px rgba(99,102,241,0.45); }
     }
     .user-name  { font-weight: 700; font-size: 1.15rem; color: var(--text-primary); }
     .user-email { color: var(--text-secondary); font-size: .875rem; margin-bottom: 16px; }
@@ -228,6 +245,8 @@ import { DocumentsService, DocumentDto } from '../../core/services/document.serv
     }
     .badge--notes { background: #ede9fe; color: #6d28d9; }
     .badge--docs  { background: #dbeafe; color: #2563eb; }
+    :host-context(.dark) .badge--notes { background: #4c1d95; color: #ddd6fe; }
+    :host-context(.dark) .badge--docs  { background: #1e3a5f; color: #93c5fd; }
 
     /* Shared nav body */
     .nav-body {
@@ -240,7 +259,7 @@ import { DocumentsService, DocumentDto } from '../../core/services/document.serv
       &:hover {
         box-shadow: var(--shadow-sm);
         border-color: #c7d2fe;
-        background: linear-gradient(135deg, #f5f3ff, #eef2ff);
+        background: var(--surface-2);
       }
     }
 
@@ -256,6 +275,14 @@ import { DocumentsService, DocumentDto } from '../../core/services/document.serv
     .nav-icon--docs {
       background: linear-gradient(135deg, #eff6ff, #dbeafe);
       mat-icon { color: #2563eb; }
+    }
+    :host-context(.dark) .nav-icon--notes {
+      background: linear-gradient(135deg, #312e81, #1e1b4b);
+      mat-icon { color: #a5b4fc; }
+    }
+    :host-context(.dark) .nav-icon--docs {
+      background: linear-gradient(135deg, #1e3a5f, #312e81);
+      mat-icon { color: #93c5fd; }
     }
 
     .nav-text { flex: 1; min-width: 0; }

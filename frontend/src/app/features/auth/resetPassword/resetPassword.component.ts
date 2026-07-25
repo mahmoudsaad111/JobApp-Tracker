@@ -123,6 +123,7 @@ type ViewState = 'form' | 'success' | 'invalid';
   `,
   styles: [`
     .auth-form {
+      animation: fadeIn 0.35s ease;
       h2 { font-size: 1.5rem; font-weight: 700; color: #1a1f3a; }
       .subtitle { color: #6b7280; margin: 4px 0 24px; font-size: .9rem; line-height: 1.6; }
     }
@@ -132,10 +133,21 @@ type ViewState = 'form' | 'success' | 'invalid';
       background: #fee2e2; color: #991b1b;
       padding: 10px 14px; border-radius: 8px;
       font-size: .875rem; margin-bottom: 12px;
+      animation: shake 0.4s ease;
       mat-icon { font-size: 18px; width: 18px; height: 18px; }
     }
 
     .w-full { width: 100%; }
+    mat-icon[matPrefix] {
+      color: #94a3b8;
+      margin-right: 4px;
+    }
+    .mat-mdc-form-field:focus-within mat-icon[matPrefix] {
+      color: #6366f1;
+    }
+    button[matSuffix] mat-icon {
+      color: #94a3b8;
+    }
 
     .submit-btn {
       margin-top: 8px; height: 48px; font-size: 1rem; font-weight: 600;
@@ -154,6 +166,7 @@ type ViewState = 'form' | 'success' | 'invalid';
     }
     .strength-label {
       font-size: .72rem; font-weight: 700; min-width: 36px;
+      transition: color .25s;
     }
 
     .switch-link {
@@ -165,6 +178,7 @@ type ViewState = 'form' | 'success' | 'invalid';
 
     .success-icon {
       display: flex; justify-content: center; margin-bottom: 16px;
+      animation: scaleIn 0.4s cubic-bezier(0.16,1,0.3,1);
       mat-icon { font-size: 48px; width: 48px; height: 48px; color: #16a34a; }
     }
   `],

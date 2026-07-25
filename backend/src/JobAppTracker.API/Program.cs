@@ -5,6 +5,7 @@ using JobAppTracker.Domain.Entities;
 using JobAppTracker.Infrastructure;
 using JobAppTracker.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -46,7 +47,22 @@ builder.Services.AddResponseCompression(options =>
     options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
 });
 
+// Add Rate limiter For better performance
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter(
+        "fixed",
+        limiterOptions =>
+        {
+            limiterOptions.PermitLimit = 100;
+            limiterOptions.Window = TimeSpan.FromMinutes(1);
+        });
+});
+
 var app = builder.Build();
+
+
+app.UseMiddleware<ExceptionMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -54,19 +70,23 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseResponseCompression();
 
-app.UseStaticFiles();
-app.UseCors("AngularPolicy");
-app.UseRouting();
 if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+
+app.UseStaticFiles();
+app.UseRouting();
+
+app.UseCors("AngularPolicy");
+
+app.UseRateLimiter(); 
+app.UseResponseCompression();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseMiddleware<ExceptionMiddleware>();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 

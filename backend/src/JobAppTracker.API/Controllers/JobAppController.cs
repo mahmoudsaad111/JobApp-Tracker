@@ -82,12 +82,7 @@ namespace JobAppTracker.API.Controllers
         public async Task<IActionResult> GetJobAppsForUser([FromQuery] GetJobAppsForUserQuery Query)
         {
             var result = await _mediator.Send(Query);
-            return Ok(
-                ApiResponse<IEnumerable<GetJobAppForUserDto>>.SuccessResult(
-                    result,
-                    "JobApps Retrieved Successfully"
-                )
-            );
+            return Ok(result);
         }
     }
 }

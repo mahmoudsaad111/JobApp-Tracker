@@ -1,12 +1,17 @@
-import { Component, inject, OnInit, signal, computed, HostListener } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { CommonModule, DatePipe }                       from '@angular/common';
-import { RouterLink }                                   from '@angular/router';
+import { RouterLink, Router, ActivatedRoute }                                   from '@angular/router';
 import { FormsModule }                                  from '@angular/forms';
 import { MatButtonModule }                              from '@angular/material/button';
 import { MatIconModule }                                from '@angular/material/icon';
 import { MatProgressSpinnerModule }                     from '@angular/material/progress-spinner';
 import { MatTooltipModule }                             from '@angular/material/tooltip';
+import { MatFormFieldModule }                           from '@angular/material/form-field';
+import { MatInputModule }                               from '@angular/material/input';
+import { MatSelectModule }                              from '@angular/material/select';
+import { MatDatepickerModule }                          from '@angular/material/datepicker';
+import { MatNativeDateModule }                          from '@angular/material/core';
 import { InterviewsService }                            from '@core/services/interviews.service';
 import { Interview, InterviewType, ApplicationStatus }  from '../../core/models';
 
@@ -73,6 +78,7 @@ interface EditForm {
     CommonModule, RouterLink, FormsModule,
     MatButtonModule, MatIconModule,
     MatProgressSpinnerModule, MatTooltipModule,
+    MatFormFieldModule, MatInputModule, MatSelectModule, MatDatepickerModule, MatNativeDateModule,
   ],
   providers: [DatePipe],
   animations: [
@@ -133,113 +139,68 @@ interface EditForm {
   </div>
 
   <!-- Filter bar -->
-  <div class="filters-bar isolate relative z-20 flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white/70 backdrop-blur-xl shadow-[0_4px_20px_-4px_rgba(99,102,241,0.08)] px-4 py-4 mb-4 transition-shadow hover:shadow-[0_8px_28px_-6px_rgba(99,102,241,0.14)]">
+  <div class="filters-card isolate relative z-10 flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white/70 dark:bg-slate-900/60 dark:border-slate-700/60 backdrop-blur-xl shadow-[0_4px_20px_-4px_rgba(99,102,241,0.08)] px-5 py-4 mb-5 transition-shadow hover:shadow-[0_8px_28px_-6px_rgba(99,102,241,0.14)] dark:hover:shadow-[0_8px_28px_-6px_rgba(99,102,241,0.14)]">
 
-    <!-- Row 1: search + section tabs -->
-    <div class="flex flex-wrap items-center gap-2.5">
-      <div class="group flex items-center flex-1 min-w-[220px] bg-slate-50 border border-slate-200 rounded-xl overflow-hidden transition-all duration-200 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-500/10 focus-within:bg-white">
-        <mat-icon class="!text-[18px] !w-[18px] !h-[18px] pl-3 pr-1.5 text-slate-400 group-focus-within:text-indigo-500 transition-colors">search</mat-icon>
-        <input class="border-0 bg-transparent outline-none py-2 px-1 text-sm w-full text-slate-800 placeholder:text-slate-400"
-               type="text"
-               placeholder="Search company, role, interviewer\u2026"
+    <div class="flex flex-wrap items-center gap-3">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search</mat-label>
+        <input matInput #searchBox placeholder="Company, role, interviewer\u2026"
                [value]="searchQuery()"
-               (input)="searchQuery.set($any($event.target).value); resetPage()"/>
+               (input)="searchQuery.set($any($event.target).value); resetPage()">
+        <mat-icon matPrefix>search</mat-icon>
         @if (searchQuery()) {
-          <button class="bg-transparent border-0 cursor-pointer py-1 px-2 text-slate-400 hover:text-rose-500 transition-colors flex items-center animate-pop-in"
-                  (click)="searchQuery.set(''); resetPage()">
-            <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">close</mat-icon>
+          <button matSuffix mat-icon-button (click)="searchQuery.set(''); resetPage()">
+            <mat-icon>close</mat-icon>
           </button>
         }
-      </div>
+      </mat-form-field>
 
-      <div class="flex gap-1 bg-slate-50 border border-slate-200/70 rounded-xl p-1 flex-shrink-0">
-        @for (tab of sectionTabs; track tab.value) {
-          <button class="relative inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[0.82rem] font-bold cursor-pointer transition-all duration-200"
-                  [class.text-white]="section() === tab.value"
-                  [class.shadow-md]="section() === tab.value"
-                  [class.text-slate-500]="section() !== tab.value"
-                  [class.hover:text-slate-800]="section() !== tab.value"
-                  [style.background]="section() === tab.value ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'transparent'"
-                  (click)="section.set(tab.value); resetPage()">
-            <mat-icon class="!text-[15px] !w-[15px] !h-[15px]">{{ tab.icon }}</mat-icon>{{ tab.label }}
-          </button>
-        }
-      </div>
-    </div>
+      <mat-form-field appearance="outline" class="type-field">
+        <mat-label>Type</mat-label>
+        <mat-select multiple [value]="typesArray()" (selectionChange)="onTypesChange($event.value)">
+          @for (t of interviewTypes; track t) {
+            <mat-option [value]="t">
+              <mat-icon [style.color]="tColor(t)" class="!text-[16px] !w-[16px] !h-[16px] !align-middle !mr-1">{{ tIcon(t) }}</mat-icon>
+              {{ t }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
 
-    <!-- Row 2: type + date range + clear, separated with a divider -->
-    <div class="flex flex-wrap items-center gap-2.5 pt-3 border-t border-slate-100">
+      <mat-form-field appearance="outline" class="date-field">
+        <mat-label>From Date</mat-label>
+        <input matInput [matDatepicker]="fromPicker" [value]="dateFromValue()" (dateChange)="onFromDateChange($event.value)" placeholder="MM/DD/YYYY">
+        <mat-datepicker-toggle matSuffix [for]="fromPicker"/>
+        <mat-datepicker #fromPicker/>
+      </mat-form-field>
 
-      <!-- Type dropdown -->
-      <div class="dropdown-wrap relative">
-        <button class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border-[1.5px] px-3 py-1.5 text-[0.82rem] font-bold cursor-pointer transition-all duration-200"
-                [class]="selectedTypes().size > 0
-                  ? 'border-indigo-500 bg-indigo-50 text-indigo-600'
-                  : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-indigo-400 hover:text-indigo-500'"
-                (click)="typeDropOpen = !typeDropOpen">
-          <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">category</mat-icon>
-          <span>
-            @if (selectedTypes().size === 0) { Type }
-            @else if (selectedTypes().size === 1) { {{ selectedTypes().values().next().value }} }
-            @else { {{ selectedTypes().size }} types }
-          </span>
-          <mat-icon class="!text-[17px] !w-[17px] !h-[17px] ml-0.5 transition-transform duration-200" [class.rotate-180]="typeDropOpen">expand_more</mat-icon>
+      <mat-form-field appearance="outline" class="date-field">
+        <mat-label>To Date</mat-label>
+        <input matInput [matDatepicker]="toPicker" [value]="dateToValue()" (dateChange)="onToDateChange($event.value)" placeholder="MM/DD/YYYY">
+        <mat-datepicker-toggle matSuffix [for]="toPicker"/>
+        <mat-datepicker #toPicker/>
+      </mat-form-field>
+
+      @if (dateFrom() || dateTo()) {
+        <button class="inline-flex items-center gap-1.5 rounded-xl border-[1.5px] border-rose-200 text-rose-500 px-3 py-1.5 text-[0.82rem] font-bold cursor-pointer transition-all hover:bg-rose-50 hover:border-rose-400"
+                (click)="dateFrom.set(''); dateTo.set(''); resetPage()">
+          <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">clear</mat-icon> Clear Dates
         </button>
-        @if (typeDropOpen) {
-          <div class="absolute top-[calc(100%+8px)] left-0 z-50 min-w-[210px] rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden"
-               @dropdownAnim (click)="$event.stopPropagation()">
-            <div class="flex items-center justify-between px-3.5 pt-2.5 pb-2 border-b border-slate-100 text-[0.72rem] font-extrabold uppercase tracking-wider text-slate-500">
-              <span>Interview Type</span>
-              @if (selectedTypes().size > 0) {
-                <button class="bg-transparent border-0 cursor-pointer text-[0.75rem] font-bold text-rose-500 hover:underline p-0" (click)="clearTypeFilter()">Clear</button>
-              }
-            </div>
-            @for (t of interviewTypes; track t) {
-              <label class="flex items-center gap-2 px-3.5 py-2.5 cursor-pointer transition-colors text-sm font-medium text-slate-700 hover:bg-slate-50"
-                     [class.bg-indigo-50]="selectedTypes().has(t)">
-                <span class="w-[18px] h-[18px] rounded-md border-[1.5px] border-slate-200 flex items-center justify-center flex-shrink-0 bg-white transition-all"
-                      [class.bg-indigo-500]="selectedTypes().has(t)"
-                      [class.border-indigo-500]="selectedTypes().has(t)">
-                  @if (selectedTypes().has(t)) { <mat-icon class="!text-[11px] !text-white">check</mat-icon> }
-                </span>
-                <mat-icon [style.color]="tColor(t)" class="!text-[16px] !w-[16px] !h-[16px]">{{ tIcon(t) }}</mat-icon>
-                <span class="flex-1">{{ t }}</span>
-                <input type="checkbox" class="hidden" [checked]="selectedTypes().has(t)" (change)="toggleType(t)"/>
-              </label>
-            }
-          </div>
-        }
-      </div>
-
-      <!-- Date range -->
-      <div class="flex items-center gap-1.5">
-        <div class="flex flex-col gap-1">
-          <label class="text-[0.66rem] font-extrabold uppercase tracking-wider text-slate-400 pl-0.5">From</label>
-          <div class="flex items-center gap-1 rounded-xl border-[1.5px] px-2.5 py-1.5 transition-colors"
-               [class]="dateFrom() ? 'border-indigo-500 bg-indigo-50/60' : 'border-slate-200 bg-slate-50'">
-            <mat-icon class="!text-[15px] text-slate-400 pointer-events-none flex-shrink-0">event</mat-icon>
-            <input type="date" class="border-0 bg-transparent outline-none text-[0.82rem] text-slate-800 font-sans w-[98px]"
-                   [value]="dateFrom()"
-                   (change)="dateFrom.set($any($event.target).value); resetPage()"/>
-          </div>
-        </div>
-        <span class="text-slate-400 text-sm mt-3.5">\u2192</span>
-        <div class="flex flex-col gap-1">
-          <label class="text-[0.66rem] font-extrabold uppercase tracking-wider text-slate-400 pl-0.5">To</label>
-          <div class="flex items-center gap-1 rounded-xl border-[1.5px] px-2.5 py-1.5 transition-colors"
-               [class]="dateTo() ? 'border-indigo-500 bg-indigo-50/60' : 'border-slate-200 bg-slate-50'">
-            <mat-icon class="!text-[15px] text-slate-400 pointer-events-none flex-shrink-0">event</mat-icon>
-            <input type="date" class="border-0 bg-transparent outline-none text-[0.82rem] text-slate-800 font-sans w-[98px]"
-                   [value]="dateTo()"
-                   (change)="dateTo.set($any($event.target).value); resetPage()"/>
-          </div>
-        </div>
-      </div>
+      }
 
       @if (hasActiveFilters()) {
-        <button class="ml-auto inline-flex items-center gap-1.5 rounded-xl border-[1.5px] border-rose-200 text-rose-500 px-3 py-1.5 text-[0.82rem] font-bold cursor-pointer transition-all hover:bg-rose-50 hover:border-rose-400 animate-pop-in"
+        <button class="ml-auto inline-flex items-center gap-1.5 rounded-xl border-[1.5px] border-rose-200 text-rose-500 px-3 py-1.5 text-[0.82rem] font-bold cursor-pointer transition-all hover:bg-rose-50 hover:border-rose-400"
                 (click)="clearFilters()">
           <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">filter_alt_off</mat-icon> Clear all
+        </button>
+      }
+    </div>
+
+    <div class="filter-toggle w-fit self-start" role="group" aria-label="Filter interviews">
+      @for (tab of sectionTabs; track tab.value) {
+        <button type="button" class="filter-toggle-btn" [class.filter-toggle-btn--active]="section() === tab.value"
+                (click)="section.set(tab.value); resetPage()">
+          <mat-icon>{{ tab.icon }}</mat-icon> {{ tab.label }}
         </button>
       }
     </div>
@@ -327,7 +288,7 @@ interface EditForm {
       </div>
       <div class="iv-grid" [@gridStagger]="animKey()">
         @for (iv of pagedUpcoming(); track iv.interviewId) {
-          <div class="app-card iv-card iv-card--upcoming" [style.borderLeftColor]="tColor(iv.interviewType)" (click)="open(iv)" role="button" tabindex="0" (keydown.enter)="open(iv)">
+          <div class="app-card iv-card iv-card--upcoming" [style.borderLeftColor]="tColor(iv.interviewType)" (click)="open(iv)" (mousemove)="tilt($event)" (mouseleave)="resetTilt($event)" role="button" tabindex="0" (keydown.enter)="open(iv)">
             <ng-container *ngTemplateOutlet="cardTpl; context:{ $implicit: iv }"/>
           </div>
         }
@@ -344,7 +305,7 @@ interface EditForm {
       </div>
       <div class="iv-grid" [@gridStagger]="animKey()">
         @for (iv of pagedPast(); track iv.interviewId) {
-          <div class="app-card iv-card iv-card--past" [style.borderLeftColor]="tColor(iv.interviewType) + '90'" (click)="open(iv)" role="button" tabindex="0" (keydown.enter)="open(iv)">
+          <div class="app-card iv-card iv-card--past" [style.borderLeftColor]="tColor(iv.interviewType) + '90'" (click)="open(iv)" (mousemove)="tilt($event)" (mouseleave)="resetTilt($event)" role="button" tabindex="0" (keydown.enter)="open(iv)">
             <ng-container *ngTemplateOutlet="cardTpl; context:{ $implicit: iv }"/>
           </div>
         }
@@ -429,12 +390,12 @@ interface EditForm {
        [style.background]="isPast(selected()!.interviewDate) ? '' : 'linear-gradient(135deg,#fff,#f5f3ff 130%)'"
        @heroPop>
     <div class="flex items-center gap-4">
-      <div class="co-avatar co-avatar--lg shadow-lg ring-4 ring-white" [style.background]="avatarBg(selected()!.jobApplication?.companyName ?? '')">
-        {{ (selected()!.jobApplication?.companyName ?? '?')[0].toUpperCase() }}
+      <div class="co-avatar co-avatar--lg shadow-lg ring-4 ring-white" [style.background]="avatarBg(selected()!.jobApplication.companyName ?? '')">
+        {{ (selected()!.jobApplication.companyName ?? '?')[0].toUpperCase() }}
       </div>
       <div>
-        <div class="text-xl font-extrabold text-slate-800 tracking-tight">{{ selected()!.jobApplication?.title ?? '\u2014' }}</div>
-        <div class="text-sm text-slate-500 mt-0.5">&#64; {{ selected()!.jobApplication?.companyName ?? '\u2014' }}</div>
+        <div class="text-xl font-extrabold text-slate-800 tracking-tight">{{ selected()!.jobApplication.title ?? '\u2014' }}</div>
+        <div class="text-sm text-slate-500 mt-0.5">&#64; {{ selected()!.jobApplication.companyName ?? '\u2014' }}</div>
       </div>
     </div>
     <div class="flex items-center gap-2 flex-wrap">
@@ -443,9 +404,9 @@ interface EditForm {
         {{ selected()!.interviewType }}
       </span>
       <span class="status-chip"
-            [style.color]="sColor(selected()!.jobApplication?.status)"
-            [style.background]="sBg(selected()!.jobApplication?.status)">
-        {{ sLabel(selected()!.jobApplication?.status) }}
+            [style.color]="sColor(selected()!.jobApplication.status)"
+            [style.background]="sBg(selected()!.jobApplication.status)">
+        {{ sLabel(selected()!.jobApplication.status) }}
       </span>
     </div>
   </div>
@@ -476,22 +437,22 @@ interface EditForm {
           <div class="detail-field-value">{{ selected()!.interviewerName }}</div>
         </div>
       }
-      @if (selected()!.jobApplication?.location) {
+      @if (selected()!.jobApplication.location) {
         <div class="app-card detail-field">
           <div class="detail-field-label"><mat-icon>location_on</mat-icon> Location</div>
-          <div class="detail-field-value">{{ selected()!.jobApplication?.location }}</div>
+          <div class="detail-field-value">{{ selected()!.jobApplication.location }}</div>
         </div>
       }
-      @if (selected()!.jobApplication?.workMode) {
+      @if (selected()!.jobApplication.workMode) {
         <div class="app-card detail-field">
           <div class="detail-field-label"><mat-icon>home_work</mat-icon> Work Mode</div>
-          <div class="detail-field-value">{{ selected()!.jobApplication?.workMode }}</div>
+          <div class="detail-field-value">{{ selected()!.jobApplication.workMode }}</div>
         </div>
       }
-      @if (selected()!.jobApplication?.type) {
+      @if (selected()!.jobApplication.type) {
         <div class="app-card detail-field">
           <div class="detail-field-label"><mat-icon>work_outline</mat-icon> Job Type</div>
-          <div class="detail-field-value">{{ selected()!.jobApplication?.type }}</div>
+          <div class="detail-field-value">{{ selected()!.jobApplication.type }}</div>
         </div>
       }
       <div class="app-card detail-field">
@@ -559,7 +520,7 @@ interface EditForm {
 
   <!-- Footer -->
   <div class="mt-6">
-    <a mat-flat-button color="primary" [routerLink]="['/applications', selected()!.jobApplication?.jobAppId]">
+    <a mat-flat-button color="primary" [routerLink]="['/applications', selected()!.jobApplication.jobAppId]">
       <mat-icon>open_in_new</mat-icon> View Full Application
     </a>
   </div>
@@ -634,18 +595,69 @@ interface EditForm {
        hover-reveal children, gradients keyed off interview state), plus the
        skeleton shimmer keyframes. No component logic lives here. */
 
+    /* Filter bar fields (mirrors Applications list styling) */
+    .search-field { flex: 1; min-width: 220px; }
+    .type-field   { width: 160px; }
+    .date-field   { width: 170px; }
+
+    .filter-toggle {
+      height: 56px;
+      display: flex;
+      align-items: stretch;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border-color, #e2e8f0);
+      background: var(--surface, #fff);
+      flex-shrink: 0;
+    }
+    .filter-toggle-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 0 16px; height: 100%;
+      border: none; border-right: 1px solid var(--border-color, #e2e8f0);
+      background: transparent; color: var(--text-secondary, #64748b);
+      font-size: 0.82rem; font-weight: 700; font-family: inherit;
+      cursor: pointer; white-space: nowrap;
+      transition: background-color .15s ease, color .15s ease;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; }
+      &:last-child { border-right: none; }
+      &:hover:not(.filter-toggle-btn--active) { background: var(--surface-2, #f8fafc); }
+      &--active { background: var(--primary-soft, #e0e7ff); color: var(--primary-dark, #4338ca); }
+    }
+    :host-context(.dark) .filter-toggle {
+      border-color: var(--border-color, #334155);
+      background: var(--surface, #1e293b);
+    }
+    :host-context(.dark) .filter-toggle-btn {
+      border-right-color: var(--border-color, #334155);
+      color: var(--text-secondary, #94a3b8);
+      &:hover:not(.filter-toggle-btn--active) { background: rgba(255,255,255,.04); }
+      &--active { background: #312e81; color: #c7d2fe; }
+    }
+
     /* Grid */
     .iv-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:16px; }
 
     /* Interview card — app-card provides bg/border/radius/shadow */
     .iv-card {
+      position: relative;
+      overflow: hidden;
       display:flex; flex-direction:column; gap:11px;
       padding:18px 20px 14px; cursor:pointer; user-select:none;
       border-left:4px solid transparent; border-radius:16px;
-      transition:transform .22s cubic-bezier(.16,1,.3,1), box-shadow .22s ease, border-color .18s;
-      &:hover { transform:translateY(-4px) scale(1.012); box-shadow:0 14px 34px -8px rgba(99,102,241,.22); }
-      &:active { transform:translateY(-1px) scale(0.99); }
+      will-change: transform;
+      transform-style: preserve-3d;
+      transition:transform .12s ease-out, box-shadow .22s ease, border-color .18s;
+      &:hover { box-shadow:0 14px 34px -8px rgba(99,102,241,.22); }
     }
+    .iv-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(220px circle at var(--mx,50%) var(--my,50%), rgba(99,102,241,.14), transparent 72%);
+      opacity: 0;
+      transition: opacity .25s ease;
+      pointer-events: none;
+    }
+    .iv-card:hover::before { opacity: 1; }
     .iv-card--past { opacity:.85; &:hover { opacity:1; } }
 
     /* Avatar */
@@ -688,7 +700,9 @@ interface EditForm {
     }
     .ivc-date--today { color:#16a34a; }
     .rel-pill { font-size:.7rem; font-weight:800; padding:2px 8px; border-radius:20px; background:#ede9fe; color:#5b21b6; margin-left:3px; }
+    :host-context(.dark) .rel-pill { background: #312e81; color: #c7d2fe; }
     .rel-pill--today { background:#dcfce7; color:#15803d; animation: pulseGlow 2.2s ease-in-out infinite; }
+    :host-context(.dark) .rel-pill--today { background: #064e3b; color: #6ee7b7; }
 
     .ivc-row {
       display:flex; align-items:center; gap:5px; font-size:.83rem; color:var(--text-secondary);
@@ -748,6 +762,8 @@ interface EditForm {
     .info-card-body { padding:16px 20px; line-height:1.8; white-space:pre-wrap; font-size:.93rem; color:var(--text-primary); }
     .info-card--notes    { border-left-color:#3b82f6; .info-card-header { background:#eff6ff; color:#1d4ed8; } }
     .info-card--feedback { border-left-color:#22c55e; .info-card-header { background:#f0fdf4; color:#15803d; } }
+    :host-context(.dark) .info-card--notes    { border-left-color:#3b82f6; .info-card-header { background:#1e3a5f; color:#93c5fd; } }
+    :host-context(.dark) .info-card--feedback { border-left-color:#22c55e; .info-card-header { background:#064e3b; color:#6ee7b7; } }
 
     /* Action buttons */
     .action-btn {
@@ -810,6 +826,8 @@ interface EditForm {
 })
 export class InterviewsComponent implements OnInit {
   private intSvc = inject(InterviewsService);
+  private router  = inject(Router);
+  private route   = inject(ActivatedRoute);
 
   loading  = signal(true);
   error    = signal(false);
@@ -831,6 +849,21 @@ export class InterviewsComponent implements OnInit {
   interviewTypes  = INTERVIEW_TYPES;
   pageSizeOptions = PAGE_SIZE_OPTIONS;
   readonly PAGE_SIZE_OPTIONS = PAGE_SIZE_OPTIONS;
+
+  typesArray     = computed(() => Array.from(this.selectedTypes()));
+  dateFromValue  = computed(() => this.dateFrom() ? new Date(this.dateFrom()) : null);
+  dateToValue    = computed(() => this.dateTo()   ? new Date(this.dateTo())   : null);
+
+  onTypesChange(vals: InterviewType[]): void {
+    this.selectedTypes.set(new Set(vals));
+    this.resetPage();
+  }
+  onFromDateChange(d: Date | null): void { this.dateFrom.set(d ? this.toDateStr(d) : ''); this.resetPage(); }
+  onToDateChange(d: Date | null): void   { this.dateTo.set(d   ? this.toDateStr(d) : ''); this.resetPage(); }
+  private toDateStr(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
 
   sectionTabs = [
     { value: 'all'      as const, label: 'All',      icon: 'calendar_month' },
@@ -895,8 +928,31 @@ export class InterviewsComponent implements OnInit {
     }
   }
 
+  @ViewChild('searchBox') searchBox?: ElementRef<HTMLInputElement>;
+
+  /** Power-user shortcut: "/" jumps focus to search (GitHub/Linear/Notion-style),
+   *  Escape backs out of whatever's currently open. Ignored while typing in
+   *  any input/textarea/select so it never hijacks normal text entry. */
+  @HostListener('document:keydown', ['$event'])
+  onGlobalKeydown(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement;
+    const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+
+    if (event.key === '/' && !isTyping) {
+      event.preventDefault();
+      this.searchBox?.nativeElement.focus();
+      return;
+    }
+    if (event.key === 'Escape') {
+      if (this.typeDropOpen) { this.typeDropOpen = false; return; }
+      if (this.editing())    { this.cancelEdit(); return; }
+      if (this.selected())   { this.close(); return; }
+    }
+  }
+
   load(): void {
     this.loading.set(true); this.error.set(false);
+    const queryId = this.route.snapshot.queryParamMap.get('id');
     this.intSvc.getAll().subscribe({
       next: res => {
         const today  = new Date(); today.setHours(0,0,0,0);
@@ -904,6 +960,10 @@ export class InterviewsComponent implements OnInit {
         this._upcoming.set(sorted.filter(iv => new Date(iv.interviewDate) >= today));
         this._past.set(sorted.filter(iv => new Date(iv.interviewDate) < today).reverse());
         this.loading.set(false);
+        if (queryId) {
+          const match = [...this._upcoming(), ...this._past()].find(iv => iv.interviewId === queryId);
+          if (match) this.open(match);
+        }
       },
       error: () => { this.loading.set(false); this.error.set(true); },
     });
@@ -963,6 +1023,23 @@ export class InterviewsComponent implements OnInit {
   }
 
   isPast(d: Date | string)                 { return new Date(d) < new Date(); }
+
+  /** Subtle 3D tilt-toward-cursor effect on interview cards. Presentational
+   *  only — reads mouse position, writes a CSS transform, no state touched. */
+  tilt(e: MouseEvent): void {
+    const el = e.currentTarget as HTMLElement;
+    const r  = el.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    const rotateY = (px - 0.5) * 8;
+    const rotateX = (0.5 - py) * 8;
+    el.style.transform = `perspective(700px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px) scale(1.02)`;
+    el.style.setProperty('--mx', `${px * 100}%`);
+    el.style.setProperty('--my', `${py * 100}%`);
+  }
+  resetTilt(e: MouseEvent): void {
+    (e.currentTarget as HTMLElement).style.transform = '';
+  }
   avatarBg(name: string)                   { return avatarColor(name); }
   tIcon(t: InterviewType)                  { return typeMeta(t).icon; }
   tColor(t: InterviewType)                 { return typeMeta(t).color; }

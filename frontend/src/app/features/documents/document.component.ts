@@ -1,6 +1,7 @@
 import {
   Component, inject, OnInit, signal, ChangeDetectionStrategy, ChangeDetectorRef,
 } from '@angular/core';
+import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule }            from '@angular/forms';
 import { environment }            from '@env/environment';
@@ -22,7 +23,37 @@ import { NotificationService }           from '../../core/services/notification.
     MatButtonModule, MatIconModule,
     MatProgressSpinnerModule, MatTooltipModule,
   ],
+  animations: [
+    trigger('pageIn', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(10px)' }),
+        animate('280ms cubic-bezier(0.16,1,0.3,1)', style({ opacity: 1, transform: 'translateY(0)' })),
+      ]),
+    ]),
+    trigger('docStagger', [
+      transition('* => *', [
+        query(':enter', [
+          style({ opacity: 0, transform: 'translateY(10px)' }),
+          stagger(35, animate('240ms cubic-bezier(0.16,1,0.3,1)', style({ opacity: 1, transform: 'translateY(0)' }))),
+        ], { optional: true }),
+      ]),
+    ]),
+    trigger('popIn', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'scale(0.97)' }),
+        animate('200ms cubic-bezier(0.16,1,0.3,1)', style({ opacity: 1, transform: 'scale(1)' })),
+      ]),
+    ]),
+  ],
   template: `
+    <div class="page-container" @pageIn>
+      <div class="flex items-center justify-between gap-4 flex-wrap mb-6">
+        <div>
+          <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent">Documents</h1>
+          <p class="text-slate-500 text-sm mt-1 font-medium">{{ documents().length }} file{{ documents().length === 1 ? '' : 's' }} stored</p>
+        </div>
+      </div>
+
     <div class="app-card section-card">
 
       <!-- ── Header ── -->
@@ -41,9 +72,20 @@ import { NotificationService }           from '../../core/services/notification.
                (change)="onFileSelected($event)">
       </div>
 
+      <!-- ── Drag-and-drop zone ── -->
+      @if (!pendingFile()) {
+        <div class="dropzone" [class.dropzone--active]="dragActive()"
+             (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)"
+             (click)="fileInput.click()">
+          <mat-icon>cloud_upload</mat-icon>
+          <p><strong>Drop a file here</strong> or click to browse</p>
+          <p class="dropzone-sub">PDF, DOC, or DOCX</p>
+        </div>
+      }
+
       <!-- ── Pending-upload bar ── -->
       @if (pendingFile()) {
-        <div class="upload-bar">
+        <div class="upload-bar" @popIn>
           <div class="upload-file-info">
             <div class="upload-file-icon">
               <mat-icon>insert_drive_file</mat-icon>
@@ -88,7 +130,7 @@ import { NotificationService }           from '../../core/services/notification.
         </div>
 
       } @else {
-        <div class="docs-list">
+        <div class="docs-list" [@docStagger]="documents().length">
           @for (doc of documents(); track doc.id) {
             <div class="doc-item">
 
@@ -116,13 +158,13 @@ import { NotificationService }           from '../../core/services/notification.
               <!-- Actions -->
               <div class="doc-actions">
 
-                @if (doc.contentType?.toLowerCase() === 'pdf') {
+                @if (doc.contentType.toLowerCase() === 'pdf') {
                   <button mat-icon-button matTooltip="View PDF" (click)="viewFile(doc)">
                     <mat-icon>visibility</mat-icon>
                   </button>
                 }
 
-                @if (doc.contentType?.toLowerCase() === 'word') {
+                @if (doc.contentType.toLowerCase() === 'word') {
                   <button mat-icon-button matTooltip="Open in Google Docs"
                           (click)="openInGoogleDocs(doc)">
                     <mat-icon>open_in_new</mat-icon>
@@ -150,6 +192,7 @@ import { NotificationService }           from '../../core/services/notification.
         </div>
       }
 
+    </div>
     </div>
   `,
   styles: [`
@@ -185,6 +228,7 @@ import { NotificationService }           from '../../core/services/notification.
       display: flex; align-items: center; justify-content: center;
       mat-icon { font-size: 18px; width: 18px; height: 18px; }
     }
+    :host-context(.dark) .upload-file-icon { background: #4c1d95; color: #ddd6fe; }
     .upload-filename {
       font-size: .875rem; font-weight: 500;
       min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -193,11 +237,31 @@ import { NotificationService }           from '../../core/services/notification.
     .type-select {
       border: 1px solid var(--border, #e2e8f0); border-radius: 8px;
       padding: 6px 10px; font-size: .875rem;
-      background: white; outline: none; cursor: pointer;
+      background: var(--bg-surface); outline: none; cursor: pointer;
       transition: border-color .15s;
       &:focus { border-color: var(--primary, #6366f1); }
     }
     .upload-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    .dropzone {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; gap: 4px;
+      border: 2px dashed var(--border, #e2e8f0); border-radius: 14px;
+      padding: 28px 20px; margin-bottom: 16px; cursor: pointer;
+      background: var(--surface-2, #f8fafc);
+      transition: border-color .18s ease, background .18s ease, transform .18s ease;
+      mat-icon { font-size: 30px; width: 30px; height: 30px; color: var(--primary,#6366f1); opacity: .6; margin-bottom: 4px; }
+      p { margin: 0; font-size: .85rem; color: var(--text-secondary,#64748b); }
+      strong { color: var(--text-primary); }
+      &:hover { border-color: color-mix(in srgb, var(--primary,#6366f1) 45%, transparent); background: color-mix(in srgb, var(--primary,#6366f1) 4%, var(--surface-2,#f8fafc)); }
+    }
+    .dropzone--active {
+      border-color: var(--primary,#6366f1);
+      background: color-mix(in srgb, var(--primary,#6366f1) 8%, var(--surface-2,#f8fafc));
+      transform: scale(1.01);
+      mat-icon { opacity: 1; }
+    }
+    .dropzone-sub { font-size: .72rem !important; opacity: .7; margin-top: 2px !important; }
 
     .docs-list { display: flex; flex-direction: column; gap: 8px; }
 
@@ -211,15 +275,15 @@ import { NotificationService }           from '../../core/services/notification.
       }
     }
 
-    .doc-icon {
-      width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      mat-icon { font-size: 22px; width: 22px; height: 22px; }
-    }
+    .doc-icon { width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; mat-icon { font-size: 22px; width: 22px; height: 22px; } }
     .doc-icon--pdf   { background: #fee2e2; color: #dc2626; }
     .doc-icon--word  { background: #dbeafe; color: #2563eb; }
     .doc-icon--image { background: #dcfce7; color: #16a34a; }
     .doc-icon--other { background: #f3f4f6; color: #6b7280; }
+    :host-context(.dark) .doc-icon--pdf   { background: #7f1d1d; color: #fca5a5; }
+    :host-context(.dark) .doc-icon--word  { background: #1e3a5f; color: #93c5fd; }
+    :host-context(.dark) .doc-icon--image { background: #064e3b; color: #6ee7b7; }
+    :host-context(.dark) .doc-icon--other { background: #334155; color: #94a3b8; }
 
     .doc-info { flex: 1; min-width: 0; }
     .doc-name {
@@ -249,6 +313,15 @@ import { NotificationService }           from '../../core/services/notification.
     .chip--coverletter { background: #d1fae5; color: #059669; }
     .chip--other-type  { background: #f3f4f6; color: #6b7280; }
 
+    :host-context(.dark) .chip--pdf   { background: #7f1d1d; color: #fca5a5; }
+    :host-context(.dark) .chip--word  { background: #1e3a5f; color: #93c5fd; }
+    :host-context(.dark) .chip--image { background: #064e3b; color: #6ee7b7; }
+    :host-context(.dark) .chip--other { background: #334155; color: #94a3b8; }
+    :host-context(.dark) .chip--cv          { background: #4c1d95; color: #ddd6fe; }
+    :host-context(.dark) .chip--resume      { background: #78350f; color: #fcd34d; }
+    :host-context(.dark) .chip--coverletter { background: #064e3b; color: #6ee7b7; }
+    :host-context(.dark) .chip--other-type  { background: #334155; color: #94a3b8; }
+
     .doc-actions { display: flex; gap: 2px; flex-shrink: 0; }
 
     .loading-row { display: flex; justify-content: center; padding: 32px; }
@@ -274,6 +347,7 @@ export class DocumentsComponent implements OnInit {
   // ← converted to signal so OnPush picks up changes
   pendingFile    = signal<File | null>(null);
   pendingDocType = 'CV';
+  dragActive     = signal(false);
 
   ngOnInit(): void { this.loadDocuments(); }
 
@@ -334,6 +408,23 @@ export class DocumentsComponent implements OnInit {
       this.pendingFile.set(input.files[0]);
       input.value = '';
     }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.dragActive.set(true);
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.dragActive.set(false);
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.dragActive.set(false);
+    const file = event.dataTransfer?.files?.[0];
+    if (file) this.pendingFile.set(file);
   }
 
   cancelUpload(): void {
