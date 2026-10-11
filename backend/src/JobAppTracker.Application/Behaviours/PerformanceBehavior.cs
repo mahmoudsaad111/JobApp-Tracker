@@ -30,10 +30,9 @@ namespace JobAppTracker.Application.Behaviours
             if (stopwatch.ElapsedMilliseconds > WarningThresholdMilliseconds)
             {
                 _logger.LogWarning(
-                    "Long running request {RequestName} took {ElapsedMilliseconds}ms {@Request}",
+                    "Long running request {RequestName} took {ElapsedMilliseconds}ms",
                     typeof(TRequest).Name,
-                    stopwatch.ElapsedMilliseconds,
-                    request
+                    stopwatch.ElapsedMilliseconds
                 );
             }
             else

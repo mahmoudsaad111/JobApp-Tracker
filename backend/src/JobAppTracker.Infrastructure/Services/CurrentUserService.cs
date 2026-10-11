@@ -20,5 +20,9 @@ namespace JobAppTracker.Infrastructure.Services
             Guid.Parse(
                 _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
             );
+        public Guid? UserIdOrNull =>
+    Guid.TryParse(
+        _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+        out var id) ? id : null;
     }
 }

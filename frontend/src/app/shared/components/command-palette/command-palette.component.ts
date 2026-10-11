@@ -100,14 +100,14 @@ interface PaletteCommand {
     .cp-backdrop {
       position: fixed; inset: 0; z-index: 10000;
       background: rgba(10, 15, 30, 0.55);
-      backdrop-filter: blur(4px);
+      backdrop-filter: none;
       display: flex; align-items: flex-start; justify-content: center;
       padding-top: 12vh;
     }
     .cp-panel {
       width: 100%; max-width: 560px; margin: 0 20px;
       background: var(--bg-surface);
-      border-radius: var(--radius-lg);
+      border-radius: 6px;
       box-shadow: var(--shadow-xl);
       border: 1px solid var(--border-color);
       overflow: hidden;
@@ -141,13 +141,13 @@ interface PaletteCommand {
     }
     .cp-item {
       width: 100%; display: flex; align-items: center; gap: 12px;
-      padding: 10px 12px; border-radius: 10px; border: none;
+      padding: 10px 12px; border-radius: 4px; border: none;
       background: none; color: var(--text-primary);
       font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: left;
       transition: background 0.1s ease;
       mat-icon:first-child { color: var(--text-secondary); font-size: 19px; width: 19px; height: 19px; }
       &.active {
-        background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.12));
+        background: var(--primary-soft);
         mat-icon:first-child { color: var(--primary); }
       }
     }

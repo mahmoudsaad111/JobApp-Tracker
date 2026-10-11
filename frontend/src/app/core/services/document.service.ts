@@ -49,6 +49,14 @@ export class DocumentsService {
     );
   }
 
+  /** GET /api/document/:id/file  (authenticated, returns the raw file) */
+  getFile(id: string, download = false): Observable<Blob> {
+    return this.http.get(`${this.base}/${id}/file`, {
+      params: { download },
+      responseType: 'blob',
+    });
+  }
+
   /** DELETE /api/documents/:id */
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`).pipe(

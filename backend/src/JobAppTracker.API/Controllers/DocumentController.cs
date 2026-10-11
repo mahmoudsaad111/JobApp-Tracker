@@ -54,6 +54,22 @@ namespace JobAppTracker.API.Controllers
             );
         }
 
+        // ── GET /api/document/{id}/file ───────────────────────────────────────
+        // The only way to read an uploaded file: authenticated + ownership-checked.
+        [HttpGet("{id:guid}/file")]
+        public async Task<IActionResult> GetDocumentFile(Guid id, [FromQuery] bool download = false)
+        {
+            var file = await _mediator.Send(new GetDocumentFileQuery { DocumentId = id });
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
+
+            if (download)
+                return PhysicalFile(file.PhysicalPath, file.ContentType, file.FileName);
+
+            Response.Headers["Content-Disposition"] =
+                $"inline; filename*=UTF-8''{Uri.EscapeDataString(file.FileName)}";
+            return PhysicalFile(file.PhysicalPath, file.ContentType);
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDocument(string id) { 
           var result = await _mediator.Send(new DeleteDocumentCommand { DocumentId = Guid.Parse(id) });

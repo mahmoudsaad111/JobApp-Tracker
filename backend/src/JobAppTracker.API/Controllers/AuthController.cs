@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using JobAppTracker.Application.Common.Responses;
+﻿using JobAppTracker.Application.Common.Responses;
 using JobAppTracker.Application.Features.Authentication.Commands;
 using JobAppTracker.Application.Features.Authentication.DTOs;
 using JobAppTracker.Domain.Entities;
@@ -7,11 +6,14 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace JobAppTracker.API.Controllers
 {
     [ApiController]
     [Route("api/auth")]
+    [EnableRateLimiting("auth")]         
+
     public class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -29,7 +31,9 @@ namespace JobAppTracker.API.Controllers
             _userManager = userManager;
         }
 
+
         [HttpPost("Register")]
+        [EnableRateLimiting("email")]
         public async Task<IActionResult> Register(RegisterUserCommand command)
         {
             var result = await _mediator.Send(command);
@@ -59,6 +63,7 @@ namespace JobAppTracker.API.Controllers
             return Ok(ApiResponse<object>.SuccessResult(result, "Password changed successfully"));
         }
 
+
         [HttpPost("ResetPassword")]
         public async Task<IActionResult> ResetPassword(ResetPasswordCommand command)
         {
@@ -67,6 +72,7 @@ namespace JobAppTracker.API.Controllers
         }
 
         [HttpPost("ResendConfirmationEmail")]
+        [EnableRateLimiting("email")]
         public async Task<IActionResult> ResendConfirmationEmail(
             ResendConfirmationEmailCommand command
         )
@@ -76,6 +82,7 @@ namespace JobAppTracker.API.Controllers
         }
 
         [HttpPost("ForgotPassword")]
+        [EnableRateLimiting("email")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command)
         {
             var result = await _mediator.Send(command);

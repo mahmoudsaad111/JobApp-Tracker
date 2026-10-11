@@ -31,8 +31,8 @@ export interface ConfirmDialogData {
   styles: [`
     .confirm-shell { padding: 4px 2px 0; }
     .confirm-icon {
-      width: 48px; height: 48px; border-radius: 14px;
-      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      width: 42px; height: 42px; border-radius: 5px;
+      background: #f8e8e6;
       display: flex; align-items: center; justify-content: center;
       margin-bottom: 14px;
       mat-icon { color: #dc2626; font-size: 26px; width: 26px; height: 26px; }
@@ -46,8 +46,8 @@ export interface ConfirmDialogData {
     }
     .confirm-btn {
       display: inline-flex; align-items: center; gap: 6px;
-      border-radius: 10px; padding: 8px 18px; font-size: 0.85rem; font-weight: 700;
-      cursor: pointer; border: none; transition: transform .15s ease, box-shadow .15s ease;
+      border-radius: 4px; padding: 8px 18px; font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; border: none; transition: background-color .15s ease;
       mat-icon { font-size: 16px; width: 16px; height: 16px; }
       &:active { transform: scale(0.96); }
     }
@@ -56,9 +56,9 @@ export interface ConfirmDialogData {
       &:hover { border-color: #94a3b8; color: var(--text-primary); }
     }
     .confirm-btn--danger {
-      background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff;
-      box-shadow: 0 4px 14px -4px rgba(220,38,38,.5);
-      &:hover { box-shadow: 0 6px 18px -4px rgba(220,38,38,.6); transform: translateY(-1px); }
+      background: #c84f4b; color: #fff;
+      box-shadow: none;
+      &:hover { background: #ad3e3a; transform: none; }
     }
   `],
 })

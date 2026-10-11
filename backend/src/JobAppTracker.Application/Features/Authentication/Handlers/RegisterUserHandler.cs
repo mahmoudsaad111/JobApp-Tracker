@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using JobAppTracker.Application.Common.Exceptions;
+using JobAppTracker.Application.Common.Templates;
 using JobAppTracker.Application.Features.Authentication.Commands;
 using JobAppTracker.Application.Features.Authentication.DTOs;
 using JobAppTracker.Application.Interfaces.Repositories;
@@ -12,24 +13,28 @@ using JobAppTracker.Application.Mappers;
 using JobAppTracker.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 
 namespace JobAppTracker.Application.Features.Authentication.Handlers
 {
     public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, RegisterResultDto>
     {
         private readonly UserManager<User> _usermanager;
+        private readonly ILogger<RegisterUserHandler> _logger;
         private readonly IEmailService _emailService;
         private readonly IFrontendUrlService _frontendUrlService;
 
         public RegisterUserHandler(
             UserManager<User> userManager,
             IEmailService emailService,
-            IFrontendUrlService frontendUrlService
+            IFrontendUrlService frontendUrlService,
+            ILogger<RegisterUserHandler> logger
         )
         {
             _usermanager = userManager;
             _emailService = emailService;
             _frontendUrlService = frontendUrlService;
+            _logger = logger;
         }
 
         public async Task<RegisterResultDto> Handle(
@@ -65,25 +70,24 @@ namespace JobAppTracker.Application.Features.Authentication.Handlers
             // 4. Generate email confirmation token and send email
          
 
-        try{
+       var emailSent = true;
+        try
+        {
             var token = await _usermanager.GenerateEmailConfirmationTokenAsync(user);
-            var encodedToken = WebUtility.UrlEncode(token);
-            var link = _frontendUrlService.EmailConfirmation(user.Id.ToString(), encodedToken);
+            var link = _frontendUrlService.EmailConfirmation(user.Id.ToString(), WebUtility.UrlEncode(token));
             await _emailService.SendEmailAsync(
                 user.Email,
-                "Verify your email",
-                $"Click here: <a href='{link}'>Verify Email</a>"
-            );
+                EmailTemplates.ConfirmEmailSubject,
+                EmailTemplates.ConfirmEmail(user.FirstName, link));
         }
-            catch (Exception ex)
+        catch (Exception ex)
         {
-          Console.WriteLine($"EMAIL ERROR: {ex.Message}");
-          Console.WriteLine($"EMAIL INNER: {ex.InnerException?.Message}");
-            throw;
+            emailSent = false;
+            _logger.LogError(ex, "Could not send confirmation email to user {UserId}", user.Id);
         }
 
             // 5. Return result
-            return AuthenticationMapper.ToRegisterResultDto(user);
+            return AuthenticationMapper.ToRegisterResultDto(user) with { EmailSent = emailSent };
         }
     }
 }

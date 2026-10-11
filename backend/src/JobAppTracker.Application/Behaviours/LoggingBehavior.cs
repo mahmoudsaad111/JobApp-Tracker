@@ -21,11 +21,11 @@ namespace JobAppTracker.Application.Behaviours
             CancellationToken cancellationToken
         )
         {
-            _logger.LogInformation("Handling request {RequestName} {@Request}", typeof(TRequest).Name, request);
+            _logger.LogInformation("Handling request {RequestName}", typeof(TRequest).Name);
 
             var response = await next();
 
-            _logger.LogInformation("Handled request {RequestName} {@Response}", typeof(TRequest).Name, response);
+            _logger.LogInformation("Handled request {RequestName}", typeof(TRequest).Name);
 
             return response;
         }

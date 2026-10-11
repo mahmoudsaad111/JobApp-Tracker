@@ -15,11 +15,11 @@ namespace JobAppTracker.Application.Features.Interviews.Validators
 
             RuleFor(x => x.InterviewDate)
                 .Cascade(FluentValidation.CascadeMode.Stop)
-                .GreaterThanOrEqualTo(DateTime.Today).WithMessage("Interview date must be today or in the future");
+                .NotEmpty().WithMessage("Interview date is required");
 
             RuleFor(x => x.InterviewerName)
-                .MaximumLength(200).When(x => !string.IsNullOrWhiteSpace(x.InterviewerName))
-                .WithMessage("Interviewer name is too long (max 200 chars)");
+                .MaximumLength(100).When(x => !string.IsNullOrWhiteSpace(x.InterviewerName))
+                .WithMessage("Interviewer name is too long (max 100 chars)");
 
             RuleFor(x => x.Note)
                 .MaximumLength(2000).WithMessage("Note is too long (max 2000 chars)");

@@ -431,11 +431,11 @@ export class DashboardComponent implements OnInit {
   };
 
   get responseRate(): number {
-    if (!this.summary) return 0;
-    const { applied, interviewing, offered, rejected, withdrawn } = this.summary.byStatus;
-    const totalSent = applied + interviewing + offered + rejected + withdrawn;
-    if (totalSent === 0) return 0;
-    return Math.round(((interviewing + offered + rejected) / totalSent) * 100);
+    // Single source of truth: the backend computes the rate (drafts excluded).
+    return Math.round(this.summary?.responseRate ?? 0);
+
+
+
   }
 
   ngOnInit(): void { this.loadDashboard(); }

@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using JobAppTracker.Application.Common.Interfaces;
 using JobAppTracker.Application.Common.Settings;
+using JobAppTracker.Application.Common.Templates;
 using JobAppTracker.Application.Interfaces.Repositories;
 using JobAppTracker.Application.Interfaces.Services;
 using JobAppTracker.Application.Interfaces.Services.AI;
@@ -15,6 +16,9 @@ using JobAppTracker.Infrastructure.Services.Documents;
 using JobAppTracker.Infrastructure.Services.Email;
 using JobAppTracker.Infrastructure.Services.FileStorage;
 using JobAppTracker.Infrastructure.Services.Frontend;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -31,13 +35,29 @@ namespace JobAppTracker.Infrastructure
         )
         {
             services
-                .AddIdentity<User, IdentityRole<Guid>>(Options =>
-                {
-                    Options.User.RequireUniqueEmail = true;
-                    Options.SignIn.RequireConfirmedEmail = true;
-                })
+                .AddIdentity<User, IdentityRole<Guid>>(options =>
+                    {
+                        options.User.RequireUniqueEmail = true;
+                        options.SignIn.RequireConfirmedEmail = true;
+
+                        options.Lockout.AllowedForNewUsers = true;
+                        options.Lockout.MaxFailedAccessAttempts = 5;
+                        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                    })
                 .AddEntityFrameworkStores<AppDbContext>()
                 .AddDefaultTokenProviders();
+
+            // How long email-confirmation and password-reset links stay valid.
+            // Uses the same value the email text shows, so they can't disagree.
+            services.Configure<DataProtectionTokenProviderOptions>(options =>
+                options.TokenLifespan = TimeSpan.FromHours(EmailTemplates.LinkValidHours)
+            );
+
+            // Typed login-cookie settings (Auth section) instead of reading string keys
+            services.Configure<AuthSettings>(configuration.GetSection(AuthSettings.SectionName));
+            services
+                .AddOptions<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme)
+                .Configure<IOptions<AuthSettings>>(ConfigureAuthCookie);
 
             // Adding the database context to the service collection and configuring it to use SQL Server with the connection string from the configuration
             services.AddDbContext<AppDbContext>(options =>
@@ -73,6 +93,50 @@ namespace JobAppTracker.Infrastructure
             
 
             return services;
+        }
+
+        private static void ConfigureAuthCookie(
+            CookieAuthenticationOptions options,
+            IOptions<AuthSettings> authOptions
+        )
+        {
+            var auth = authOptions.Value;
+
+            var sameSite = Enum.TryParse<SameSiteMode>(auth.SameSite, ignoreCase: true, out var parsed)
+                ? parsed
+                : SameSiteMode.Lax;
+
+            options.Cookie.Name = "jobtracker.auth";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = sameSite;
+            options.Cookie.SecurePolicy = auth.SecureCookie
+                ? CookieSecurePolicy.Always
+                : CookieSecurePolicy.SameAsRequest;
+
+            // Idle timeout: renewed on activity
+            options.ExpireTimeSpan = TimeSpan.FromHours(auth.SlidingSessionExpireHours);
+            options.SlidingExpiration = true;
+
+            // Keep Identity's own security-stamp check, add the absolute limit before it
+            var identityCheck = options.Events.OnValidatePrincipal;
+            options.Events.OnValidatePrincipal = async context =>
+            {
+                if (
+                    context.Properties.Items.TryGetValue(AuthSettings.SessionStartKey, out var started)
+                    && DateTimeOffset.TryParse(started, out var startedAt)
+                    && DateTimeOffset.UtcNow - startedAt > TimeSpan.FromDays(auth.AbsoluteSessionDays)
+                )
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+                    return;
+                }
+
+                if (identityCheck is not null)
+                {
+                    await identityCheck(context);
+                }
+            };
         }
     }
 }

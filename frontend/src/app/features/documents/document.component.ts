@@ -164,13 +164,6 @@ import { NotificationService }           from '../../core/services/notification.
                   </button>
                 }
 
-                @if (doc.contentType.toLowerCase() === 'word') {
-                  <button mat-icon-button matTooltip="Open in Google Docs"
-                          (click)="openInGoogleDocs(doc)">
-                    <mat-icon>open_in_new</mat-icon>
-                  </button>
-                }
-
                 <button mat-icon-button matTooltip="Download" (click)="downloadFile(doc)">
                   <mat-icon>download</mat-icon>
                 </button>
@@ -374,31 +367,38 @@ export class DocumentsComponent implements OnInit {
   }
 
   // ── File actions ──────────────────────────────────────────────────────────
+  // Files are private: fetch them through the authenticated API as a blob,
+  // then hand the browser a temporary local URL.
   viewFile(doc: DocumentDto): void {
-    window.open(this.fileUrl(doc.filePath), '_blank');
-  }
-
-  openInGoogleDocs(doc: DocumentDto): void {
-    const encoded = encodeURIComponent(this.fileUrl(doc.filePath));
-    window.open(`https://docs.google.com/viewer?url=${encoded}`, '_blank');
+    // Open the tab synchronously so popup blockers allow it, then point it at the blob.
+    const tab = window.open('', '_blank');
+    this.docsSvc.getFile(doc.id).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        if (tab) tab.location.href = url;
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      },
+      error: () => {
+        tab?.close();
+        this.notify.error('Could not open the document.');
+      },
+    });
   }
 
   downloadFile(doc: DocumentDto): void {
-    const a    = document.createElement('a');
-    a.href     = this.fileUrl(doc.filePath);
-    a.target   = '_blank';
-    a.download = doc.fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
-
-  fileUrl(filePath: string): string {
-    // Strip /api (or /api/v1 etc.) from apiUrl to get the server origin
-    const origin = environment.publicUrl.replace(/\/api.*$/i, '');
-    if (filePath.startsWith('http')) return filePath;           // already absolute
-    if (filePath.startsWith('/uploads/')) return `${origin}${filePath}`;
-    return `${origin}/uploads/documents/${filePath}`;
+    this.docsSvc.getFile(doc.id, true).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href     = url;
+        a.download = doc.fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.notify.error('Could not download the document.'),
+    });
   }
 
   // ── Upload ────────────────────────────────────────────────────────────────

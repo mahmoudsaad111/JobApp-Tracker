@@ -138,6 +138,24 @@ interface EditForm {
     </div>
   </div>
 
+  <!-- Compact summary row shared with the dashboard card language -->
+  @if (!loading()) {
+    <div class="interview-summary mb-6">
+      <div class="interview-summary-card">
+        <span class="interview-summary-icon"><mat-icon>event</mat-icon></span>
+        <span><strong>{{ allCount() }}</strong><small>Total interviews</small></span>
+      </div>
+      <div class="interview-summary-card">
+        <span class="interview-summary-icon interview-summary-icon--blue"><mat-icon>upcoming</mat-icon></span>
+        <span><strong>{{ filteredUpcoming().length }}</strong><small>Upcoming</small></span>
+      </div>
+      <div class="interview-summary-card">
+        <span class="interview-summary-icon interview-summary-icon--muted"><mat-icon>history</mat-icon></span>
+        <span><strong>{{ filteredPast().length }}</strong><small>Past interviews</small></span>
+      </div>
+    </div>
+  }
+
   <!-- Filter bar -->
   <div class="filters-card isolate relative z-10 flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white/70 dark:bg-slate-900/60 dark:border-slate-700/60 backdrop-blur-xl shadow-[0_4px_20px_-4px_rgba(99,102,241,0.08)] px-5 py-4 mb-5 transition-shadow hover:shadow-[0_8px_28px_-6px_rgba(99,102,241,0.14)] dark:hover:shadow-[0_8px_28px_-6px_rgba(99,102,241,0.14)]">
 
@@ -385,7 +403,7 @@ interface EditForm {
   </div>
 
   <!-- Hero card -->
-  <div class="app-card flex items-center justify-between flex-wrap gap-4 px-7 py-6 mb-5 border-t-4"
+  <div class="app-card interview-hero flex items-center justify-between flex-wrap gap-4 px-7 py-6 mb-5 border-t-4"
        [style.border-top-color]="isPast(selected()!.interviewDate) ? '#94a3b8' : 'var(--primary,#6366f1)'"
        [style.background]="isPast(selected()!.interviewDate) ? '' : 'linear-gradient(135deg,#fff,#f5f3ff 130%)'"
        @heroPop>
@@ -821,6 +839,237 @@ interface EditForm {
       background: linear-gradient(90deg, #f1f5f9 25%, #e9edf3 37%, #f1f5f9 63%);
       background-size: 400% 100%;
       animation: shimmer 1.6s ease infinite;
+    }
+
+    /* Quiet, direct visual system for the interview workspace. Keep the
+       existing bindings and interactions; these rules only refine the UI. */
+    .page-container {
+      color: #17202a;
+    }
+
+    .page-container h1 {
+      background: none !important;
+      -webkit-text-fill-color: #17202a !important;
+      color: #17202a !important;
+      font-size: 2rem !important;
+      letter-spacing: -.035em !important;
+    }
+
+    .filters-card {
+      border: 1px solid #d8e0e8 !important;
+      border-radius: 10px !important;
+      background: #fff !important;
+      box-shadow: 0 2px 8px rgba(23, 32, 42, .045) !important;
+      backdrop-filter: none !important;
+      padding: 14px 16px !important;
+    }
+
+    .filter-toggle {
+      height: 44px;
+      border-radius: 7px;
+      background: #f6f8fa;
+    }
+
+    .filter-toggle-btn {
+      padding: 0 14px;
+      font-weight: 600;
+    }
+
+    .filter-toggle-btn--active {
+      background: #1f78b4 !important;
+      color: #fff !important;
+    }
+
+    .iv-grid {
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 14px;
+    }
+
+    .iv-card {
+      border: 1px solid #d8e0e8 !important;
+      border-left: 3px solid #1f78b4 !important;
+      border-radius: 9px !important;
+      background: #fff !important;
+      box-shadow: 0 2px 8px rgba(23, 32, 42, .04) !important;
+      padding: 16px 17px 14px;
+      transform: none !important;
+      transition: border-color .16s ease, box-shadow .16s ease, background .16s ease !important;
+    }
+
+    .iv-card::before { display: none; }
+    .iv-card:hover {
+      border-color: #a9c6da !important;
+      box-shadow: 0 7px 18px rgba(23, 32, 42, .09) !important;
+      background: #fcfdfe !important;
+    }
+    .iv-card--past { opacity: 1; border-left-color: #9aaabd !important; }
+
+    .co-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      font-size: .9rem;
+      box-shadow: none !important;
+    }
+    .iv-card:hover .co-avatar { transform: none; }
+
+    .type-chip {
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-weight: 700;
+      box-shadow: none !important;
+    }
+
+    .status-chip {
+      border: 1px solid rgba(100, 116, 139, .18);
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-weight: 600;
+    }
+
+    .ivc-title { font-size: .98rem; font-weight: 700; }
+    .ivc-company { color: #64748b !important; }
+    .ivc-date-row {
+      border: 1px solid #e5eaf0;
+      border-radius: 7px;
+      background: #f8fafc;
+      padding: 10px 11px;
+    }
+    .ivc-date { color: #1f628f; }
+    .rel-pill { border-radius: 5px; background: #e7f1f8; color: #1f628f; }
+    .rel-pill--today { background: #e7f5ed; color: #20744b; animation: none; }
+    .ivc-row { color: #5b6b7c; }
+    .ivc-row-value { color: #263746; }
+    .ivc-footer { border-top-color: #e5eaf0; }
+    .ivc-cta { color: #1f78b4; opacity: 1; transform: none; }
+
+    .detail-grid { gap: 10px; }
+    .detail-field {
+      border: 1px solid #d8e0e8 !important;
+      border-radius: 8px !important;
+      background: #fff !important;
+      box-shadow: none !important;
+      padding: 14px 15px;
+    }
+    .detail-field:hover, .info-card:hover { transform: none; }
+    .detail-field-label { color: #6b7b8c; }
+    .detail-field-value { color: #1e2b38; }
+
+    .info-card {
+      border: 1px solid #d8e0e8 !important;
+      border-left-width: 3px !important;
+      border-radius: 8px !important;
+      box-shadow: none !important;
+    }
+    .info-card-header {
+      background: #f6f8fa !important;
+      color: #34495b !important;
+      padding: 11px 15px;
+    }
+    .info-card-body { padding: 15px 17px; color: #34495b; }
+
+    .action-btn {
+      border-radius: 7px;
+      font-weight: 600;
+      box-shadow: none !important;
+    }
+    .action-btn--primary {
+      background: #1f78b4;
+      box-shadow: none;
+    }
+    .action-btn--primary:hover:not(:disabled) { background: #185f8f; box-shadow: none; }
+    .action-btn--outline { border-color: #cbd5df; }
+
+    .edit-panel {
+      border: 1px solid #d8e0e8 !important;
+      border-radius: 9px !important;
+      box-shadow: none !important;
+      padding: 21px 23px;
+    }
+    .edit-input, .edit-select, .edit-textarea {
+      border-radius: 7px;
+      background: #fff;
+    }
+
+    .page-nav-btn { border-radius: 7px; }
+
+    @media (max-width: 700px) {
+      .iv-grid { grid-template-columns: 1fr; }
+      .detail-field--wide { grid-column: span 1; }
+      .filter-toggle { width: 100%; }
+      .filter-toggle-btn { flex: 1; justify-content: center; padding: 0 8px; }
+    }
+
+    /* Match the shared product palette and component proportions. */
+    .interview-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .interview-summary-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 76px;
+      padding: 14px 16px;
+      background: var(--bg-surface, #fff);
+      border: 1px solid var(--border-color, #d7dee5);
+      border-radius: var(--radius-md, 6px);
+      box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,.06));
+    }
+    .interview-summary-icon {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 5px;
+      background: var(--primary-soft, #e6f0f6);
+      color: var(--primary, #3483b4);
+    }
+    .interview-summary-icon--blue { background: #e6f0f6; color: #3483b4; }
+    .interview-summary-icon--muted { background: #eef1f4; color: #667788; }
+    .interview-summary-icon mat-icon { font-size: 20px; width: 20px; height: 20px; }
+    .interview-summary-card span:last-child { display: flex; flex-direction: column; gap: 2px; }
+    .interview-summary-card strong { color: var(--text-primary, #1f2933); font-size: 1.35rem; line-height: 1; }
+    .interview-summary-card small { color: var(--text-secondary, #667788); font-size: .78rem; }
+
+    .interview-hero {
+      border-top-width: 3px !important;
+      border-radius: var(--radius-md, 6px) !important;
+      background: var(--bg-surface, #fff) !important;
+      box-shadow: var(--shadow-sm) !important;
+    }
+    .interview-hero .co-avatar--lg {
+      width: 52px;
+      height: 52px;
+      border-radius: 6px;
+      box-shadow: none !important;
+      border: 1px solid rgba(255,255,255,.5);
+    }
+    .interview-hero .text-xl { font-size: 1.25rem !important; color: var(--text-primary) !important; }
+
+    .interview-hero .type-chip {
+      background: var(--primary-soft, #e6f0f6) !important;
+      color: var(--primary-dark, #286b96) !important;
+      border: 1px solid var(--primary-soft, #e6f0f6);
+    }
+    .interview-hero .type-chip mat-icon { color: inherit !important; }
+
+    .page-container .detail-grid .detail-field,
+    .page-container .detail-content-grid .info-card,
+    .page-container .edit-panel {
+      border-radius: var(--radius-md, 6px) !important;
+      box-shadow: var(--shadow-sm) !important;
+    }
+    .page-container .detail-grid .detail-field { min-height: 84px; }
+    .page-container .detail-field-label { font-size: .68rem; letter-spacing: .06em; }
+    .page-container .detail-field-value { font-size: .92rem; }
+    .page-container .info-card-header { text-transform: none; letter-spacing: 0; font-size: .9rem; }
+
+    @media (max-width: 700px) {
+      .interview-summary { grid-template-columns: 1fr; gap: 8px; }
+      .interview-summary-card { min-height: 64px; }
+      .interview-hero { padding: 18px !important; }
     }
   `],
 })

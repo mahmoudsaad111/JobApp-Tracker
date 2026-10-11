@@ -87,7 +87,6 @@ namespace JobAppTracker.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("InterviewerName")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 

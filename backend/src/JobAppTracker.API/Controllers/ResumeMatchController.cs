@@ -3,10 +3,12 @@ using JobAppTracker.Application.Common.Responses;
 using JobAppTracker.Application.Features.JobMatching.Queries;
 using JobAppTracker.Application.Interfaces.Services.AI;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobAppTracker.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/job-applications/{jobApplicationId}/match")]
 public class ResumeMatchController : ControllerBase

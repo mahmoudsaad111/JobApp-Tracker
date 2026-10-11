@@ -3,10 +3,12 @@ using JobAppTracker.Application.Common.Responses;
 using JobAppTracker.Application.Features.AI.CoverLetterGeneration.DTOs;
 using JobAppTracker.Application.Features.CoverLetterGeneration.Queries;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobAppTracker.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/job-applications/{jobApplicationId}/cover-letter")]
 public class CoverLetterController : ControllerBase

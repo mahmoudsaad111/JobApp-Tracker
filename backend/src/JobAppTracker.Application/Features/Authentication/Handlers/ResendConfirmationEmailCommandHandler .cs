@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using JobAppTracker.Application.Common.Exceptions;
+using JobAppTracker.Application.Common.Templates;
 using JobAppTracker.Application.Features.Authentication.Commands;
 using JobAppTracker.Application.Interfaces.Services.Email;
 using JobAppTracker.Application.Interfaces.Services.Frontend;
@@ -37,20 +38,18 @@ namespace JobAppTracker.Application.Features.Authentication.Handlers
         )
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
-            if (user == null)
-                return true; // don't leak whether email exists
+    
+            if (user == null || user.EmailConfirmed)
+                 return true; // same response whether or not the account exists or is confirmed
 
-            if (user.EmailConfirmed)
-                throw new BadRequestException("Email is already confirmed.");
-
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var token        = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var encodedToken = WebUtility.UrlEncode(token);
-            var link = _frontendUrlService.ResetPassword(encodedToken, user.Email);
+            var link         = _frontendUrlService.EmailConfirmation(user.Id.ToString(), encodedToken);
 
             await _emailService.SendEmailAsync(
                 request.Email,
-                "Verify your email",
-                $"Click here: <a href='{link}'>Verify Email</a>"
+                EmailTemplates.ConfirmEmailSubject,
+                EmailTemplates.ConfirmEmail(user.FirstName, link)
             );
 
             return true;

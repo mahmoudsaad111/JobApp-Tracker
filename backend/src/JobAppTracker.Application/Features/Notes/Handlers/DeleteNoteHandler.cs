@@ -34,7 +34,7 @@ namespace JobAppTracker.Application.Features.Notes.Handlers
 
             if (note == null || note.UserId != userId)
             {
-                throw new BadRequestException("Note not found or access denied.");
+                throw new NotFoundException("Note not found or access denied.");
             }
 
             _noteRepository.Delete(note);
