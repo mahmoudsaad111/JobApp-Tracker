@@ -14,6 +14,8 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         notify.error('You do not have permission to perform this action.');
       } else if (error.status === 404) {
         notify.error('The requested resource was not found.');
+      } else if (error.status === 429) {
+        notify.error('Too many attempts. Please wait a bit and try again.');
       } else if (error.status >= 500) {
         notify.error('A server error occurred. Please try again later.');
       }

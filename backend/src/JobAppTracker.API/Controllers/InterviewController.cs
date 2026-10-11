@@ -3,11 +3,13 @@ using JobAppTracker.Application.Features.Interviews.Commands;
 using JobAppTracker.Application.Features.Interviews.Dtos;
 using JobAppTracker.Application.Features.Interviews.Queries;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobAppTracker.API.Controllers
 {
+    [Authorize]
     [Route("api/Interview")]
     [ApiController]
     public class InterviewController : ControllerBase
@@ -26,11 +28,11 @@ namespace JobAppTracker.API.Controllers
             return Ok(ApiResponse<CreateInterviewDto>.SuccessResult(result, "success"));
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetInterview([FromRoute] string InterviewId)
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetInterview([FromRoute] Guid id)
         {
             var result = await _mediator.Send(
-                new GetInterviewQuery { InterviewId = Guid.Parse(InterviewId) }
+                new GetInterviewQuery { InterviewId = id }
             );
             return Ok(ApiResponse<GetInterviewDto>.SuccessResult(result, "success"));
         }

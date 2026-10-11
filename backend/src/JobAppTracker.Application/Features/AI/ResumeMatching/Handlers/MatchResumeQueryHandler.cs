@@ -1,4 +1,5 @@
 // Application/Features/JobMatching/Queries/MatchResumeQueryHandler.cs
+using JobAppTracker.Application.Common.Exceptions;
 using JobAppTracker.Application.Interfaces.Repositories;
 using JobAppTracker.Application.Interfaces.Services;
 using JobAppTracker.Application.Interfaces.Services.AI;
@@ -29,9 +30,9 @@ public class MatchResumeQueryHandler : IRequestHandler<MatchResumeQuery, ResumeM
     public async Task<ResumeMatchResult> Handle(MatchResumeQuery request, CancellationToken ct)
     {
         var application = await _jobAppRepository.GetByIdAsync(request.JobApplicationId)
-            ?? throw new KeyNotFoundException($"Job application {request.JobApplicationId} not found");
+            ?? throw new NotFoundException($"Job application {request.JobApplicationId} not found");
          var document = await _documentRepository.GetByIdAsync(request.DocumentId)
-            ?? throw new KeyNotFoundException($"Document {request.DocumentId} not found");
+            ?? throw new NotFoundException($"Document {request.DocumentId} not found");
         var ResumeText=await _documentTextExtractorService.ExtractTextAsync(document.FilePath,ct); 
 
         return await _matchService.MatchAsync(application.RequiredSkills, ResumeText, ct);

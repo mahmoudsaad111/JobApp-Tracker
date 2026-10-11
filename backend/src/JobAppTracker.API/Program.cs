@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using JobAppTracker.API.Middlewares;
 using JobAppTracker.Application;
 using JobAppTracker.Domain.Entities;
@@ -50,13 +51,24 @@ builder.Services.AddResponseCompression(options =>
 // Add Rate limiter For better performance
 builder.Services.AddRateLimiter(options =>
 {
-    options.AddFixedWindowLimiter(
-        "fixed",
-        limiterOptions =>
-        {
-            limiterOptions.PermitLimit = 100;
-            limiterOptions.Window = TimeSpan.FromMinutes(1);
-        });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    static string Ip(HttpContext c) => c.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+    // Safety net for everything: 300 requests/min per IP
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
+        RateLimitPartition.GetFixedWindowLimiter(Ip(ctx), _ =>
+            new FixedWindowRateLimiterOptions { PermitLimit = 300, Window = TimeSpan.FromMinutes(1) }));
+
+    // Login/register/etc.: 10 per minute per IP
+    options.AddPolicy("auth", ctx =>
+        RateLimitPartition.GetFixedWindowLimiter(Ip(ctx), _ =>
+            new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));
+
+    // Endpoints that send email: 5 per 15 minutes per IP
+    options.AddPolicy("email", ctx =>
+        RateLimitPartition.GetFixedWindowLimiter(Ip(ctx), _ =>
+            new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(15) }));
 });
 
 var app = builder.Build();
@@ -73,19 +85,33 @@ if (app.Environment.IsDevelopment())
 
 if (!app.Environment.IsDevelopment())
 {
+    app.UseHsts(); // tells browsers: always use https for this site (sent only over https)
     app.UseHttpsRedirection();
 }
+
+// Security headers on every response (including static files)
+app.Use(async (context, next) =>
+{
+    var headers = context.Response.Headers;
+    headers["X-Content-Type-Options"] = "nosniff";
+    headers["X-Frame-Options"] = "DENY";
+    headers["Content-Security-Policy"] = "frame-ancestors 'none'";
+    headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+    await next();
+});
 
 app.UseStaticFiles();
 app.UseRouting();
 
 app.UseCors("AngularPolicy");
 
-app.UseRateLimiter(); 
 app.UseResponseCompression();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseRateLimiter(); 
 
 app.MapControllers();
 app.MapFallbackToFile("index.html");

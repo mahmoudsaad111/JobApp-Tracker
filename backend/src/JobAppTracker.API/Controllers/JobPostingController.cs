@@ -4,10 +4,12 @@ using JobAppTracker.Application.DTOs;
 using JobAppTracker.Application.Features.JobPostingParsing.Queries;
 using JobAppTracker.Domain.ValueObjects;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobAppTracker.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/job-postings/parse")]
 public class JobPostingParserController : ControllerBase

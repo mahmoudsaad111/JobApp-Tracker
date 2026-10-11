@@ -82,9 +82,6 @@ interface NavItem {
       <div class="main-content">
         <header class="topbar">
           <div class="topbar-left">
-            <button type="button" mat-icon-button class="mobile-menu" (click)="toggleMobileMenu($event)">
-              <mat-icon>menu</mat-icon>
-            </button>
             <button type="button" class="cp-trigger" (click)="openPalette()">
               <mat-icon>search</mat-icon>
               <span>Search...</span>
@@ -133,15 +130,15 @@ interface NavItem {
 
     /* ── Sidebar ── */
     .sidebar {
-      width: 260px;
-      min-width: 260px;
-      background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+      width: 230px;
+      min-width: 230px;
+      background: #292e33;
       color: #f8fafc;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      border-right: 1px solid rgba(255,255,255,0.06);
-      box-shadow: 4px 0 24px rgba(0,0,0,0.08);
+      border-right: 1px solid #42484c;
+      box-shadow: none;
     }
     .shell.collapsed .sidebar {
       width: 72px;
@@ -167,12 +164,12 @@ interface NavItem {
       width: 38px;
       height: 38px;
       min-width: 38px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      border-radius: 12px;
+      background: #3986bc;
+      border-radius: 5px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba(99,102,241,0.35);
+      box-shadow: none;
       mat-icon {
         font-size: 20px;
         width: 20px;
@@ -220,7 +217,7 @@ interface NavItem {
       align-items: center;
       gap: 12px;
       padding: 11px 14px;
-      border-radius: 12px;
+      border-radius: 4px;
       color: rgba(255,255,255,0.7);
       cursor: pointer;
       text-decoration: none;
@@ -251,10 +248,10 @@ interface NavItem {
         color: white;
       }
       &.active {
-        background: linear-gradient(90deg, rgba(99,102,241,0.25) 0%, rgba(99,102,241,0.08) 100%);
+        background: #41474c;
         color: white;
         font-weight: 600;
-        box-shadow: inset 3px 0 0 #6366f1;
+        box-shadow: inset 3px 0 0 #3986bc;
 
         mat-icon { opacity: 1; color: #818cf8; }
       }
@@ -281,9 +278,9 @@ interface NavItem {
     .topbar {
       height: 68px;
       min-height: 68px;
-      background: rgba(255,255,255,0.92);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: var(--bg-surface);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
       border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
@@ -295,7 +292,7 @@ interface NavItem {
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
     :host-context(.dark) .topbar {
-      background: rgba(19, 27, 46, 0.85);
+      background: var(--bg-surface);
     }
     .mobile-menu { display: none; }
     @media (max-width: 768px) {
@@ -342,11 +339,11 @@ interface NavItem {
       top: 0; left: 0;
       height: 3px;
       z-index: 9999;
-      background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899, #6366f1);
-      background-size: 300% 100%;
-      animation: routeShimmer 1.4s linear infinite;
+      background: var(--primary);
+      background-size: 100% 100%;
+      animation: none;
       transition: width 0.2s ease-out;
-      box-shadow: 0 0 10px rgba(99,102,241,0.7), 0 0 4px rgba(236,72,153,0.5);
+      box-shadow: none;
     }
     @keyframes routeShimmer {
       0%   { background-position: 0% 0; }
@@ -362,7 +359,7 @@ interface NavItem {
       display: flex; align-items: center; gap: 8px;
       background: var(--surface-2);
       border: 1px solid var(--border-color);
-      border-radius: 10px;
+      border-radius: 4px;
       padding: 7px 10px 7px 12px;
       cursor: pointer;
       color: var(--text-secondary);
@@ -407,17 +404,17 @@ interface NavItem {
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      background: #3986bc;
       color: white;
       font-size: 0.9rem;
       font-weight: 700;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 10px rgba(99,102,241,0.35);
+      box-shadow: none;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
 
-      &:hover { transform: scale(1.08); box-shadow: 0 4px 16px rgba(99,102,241,0.45); }
+      &:hover { transform: none; box-shadow: none; }
     }
     .user-info-menu {
       padding: 14px 18px;

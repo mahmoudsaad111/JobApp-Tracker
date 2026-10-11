@@ -47,10 +47,10 @@ import { RouterOutlet } from '@angular/router';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #1a1f3a 0%, #3949ab 100%);
+      background: #f1f4f6;
       padding: 24px;
       flex-direction: column;
-      gap: 32px;
+      gap: 18px;
       position: relative;
       overflow: hidden;
     }
@@ -59,8 +59,9 @@ import { RouterOutlet } from '@angular/router';
     .auth-orb {
       position: absolute;
       border-radius: 50%;
-      filter: blur(50px);
-      opacity: 0.35;
+      display: none;
+      filter: none;
+      opacity: 0;
       pointer-events: none;
       animation: orbFloat 12s ease-in-out infinite;
     }
@@ -87,20 +88,20 @@ import { RouterOutlet } from '@angular/router';
 
     .auth-brand {
       text-align: center;
-      color: white;
+      color: #252b31;
       position: relative; z-index: 1;
       .brand-icon {
-        width: 64px; height: 64px;
-        background: rgba(255,255,255,.15);
-        border-radius: 20px;
+        width: 42px; height: 42px;
+        background: #3986bc;
+        border-radius: 5px;
         display: flex; align-items: center; justify-content: center;
         margin: 0 auto 12px;
-        box-shadow: 0 0 0 0 rgba(255,255,255,.25);
-        animation: brandPulse 3s ease-in-out infinite;
-        mat-icon { font-size: 32px; width: 32px; height: 32px; color: white; }
+        box-shadow: none;
+        animation: none;
+        mat-icon { font-size: 22px; width: 22px; height: 22px; color: white; }
       }
       h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; }
-      p  { opacity: .7; margin-top: 4px; font-size: .95rem; }
+      p  { opacity: 1; color: #69747d; margin-top: 4px; font-size: .85rem; }
     }
     @keyframes brandPulse {
       0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,.18); }
@@ -109,11 +110,12 @@ import { RouterOutlet } from '@angular/router';
 
     .auth-box {
       background: white;
-      border-radius: 20px;
-      padding: 40px;
+      border: 1px solid #d9dfe3;
+      border-radius: 6px;
+      padding: 32px 36px 25px;
       width: 100%;
       max-width: 440px;
-      box-shadow: 0 25px 60px rgba(0,0,0,.3);
+      box-shadow: 0 2px 8px rgba(27,39,48,.07);
       position: relative; z-index: 1;
     }
   `]

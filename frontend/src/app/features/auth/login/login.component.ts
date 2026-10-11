@@ -25,9 +25,9 @@ import { NotificationService } from '../../../core/services/notification.service
       <p class="subtitle">Sign in to your JobTracker account</p>
 
       <form [formGroup]="form" (ngSubmit)="submit()">
+        <label class="login-field-label" for="login-email">Email address</label>
         <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Email</mat-label>
-          <input matInput type="email" formControlName="email" placeholder="you@example.com">
+          <input matInput id="login-email" type="email" formControlName="email" placeholder="you@example.com" autocomplete="username">
           <mat-icon matPrefix>email</mat-icon>
           @if (form.get('email')?.hasError('required') && form.get('email')?.touched) {
             <mat-error>Email is required</mat-error>
@@ -37,9 +37,9 @@ import { NotificationService } from '../../../core/services/notification.service
           }
         </mat-form-field>
 
+        <label class="login-field-label" for="login-password">Password</label>
         <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Password</mat-label>
-          <input matInput [type]="showPwd ? 'text' : 'password'" formControlName="password">
+          <input matInput id="login-password" [type]="showPwd ? 'text' : 'password'" formControlName="password" placeholder="Enter your password" autocomplete="current-password">
           <mat-icon matPrefix>lock</mat-icon>
           <button mat-icon-button matSuffix type="button" (click)="showPwd = !showPwd">
             <mat-icon>{{ showPwd ? 'visibility_off' : 'visibility' }}</mat-icon>
@@ -92,7 +92,30 @@ import { NotificationService } from '../../../core/services/notification.service
     form {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
+    }
+
+    .login-field-label {
+      color: #3d454d;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin: 5px 0 2px;
+    }
+
+    input.mat-mdc-input-element {
+      color: #252b31;
+      font-size: 0.9rem;
+      font-weight: 400;
+      -webkit-text-fill-color: #252b31;
+    }
+
+    input.mat-mdc-input-element:-webkit-autofill,
+    input.mat-mdc-input-element:-webkit-autofill:hover,
+    input.mat-mdc-input-element:-webkit-autofill:focus {
+      -webkit-box-shadow: 0 0 0 1000px #fff inset;
+      -webkit-text-fill-color: #252b31;
+      caret-color: #252b31;
+      transition: background-color 9999s ease-out;
     }
 
     /* matPrefix/matSuffix icons don't reliably inherit a visible color from

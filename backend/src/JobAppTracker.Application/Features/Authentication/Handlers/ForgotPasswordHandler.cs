@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using JobAppTracker.Application.Common.Interfaces;
+using JobAppTracker.Application.Common.Templates;
 using JobAppTracker.Application.Features.Authentication.Commands;
 using JobAppTracker.Application.Features.Authentication.DTOs;
 using JobAppTracker.Application.Interfaces.Services.Email;
@@ -49,8 +50,8 @@ namespace JobAppTracker.Application.Features.Authentication.Handlers
 
             await _emailService.SendEmailAsync(
                 request.Email,
-                "Reset Password",
-                $"Click here to reset your password: <a href='{resetLink}'>Reset Password</a>"
+                EmailTemplates.ResetPasswordSubject,
+                EmailTemplates.ResetPassword(user.FirstName, resetLink)
             );
 
             return new ForgotPasswordDto();

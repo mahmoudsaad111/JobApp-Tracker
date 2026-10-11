@@ -37,9 +37,9 @@ namespace JobAppTracker.Infrastructure.Repositories
 
         public virtual async Task<T> GetByIdAsync(Guid id)
         {
-            var result = await _dbSet.FindAsync(id);
-            return result;
+            return await _dbSet.FirstOrDefaultAsync(e => EF.Property<Guid>(e, "Id") == id);
         }
+
 
         public void Delete(T entity)
         {

@@ -201,14 +201,11 @@ import { DocumentsService, DocumentDto } from '../../core/services/document.serv
       border: 1px solid var(--border-color);
     }
     .big-avatar {
-      width: 80px; height: 80px; border-radius: 50%;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      width: 80px; height: 80px; border-radius: 6px;
+      background: var(--primary, #3986bc);
       color: white; font-size: 2rem; font-weight: 700;
       display: flex; align-items: center; justify-content: center; margin-bottom: 12px;
-      box-shadow: 0 8px 24px rgba(99,102,241,0.35);
-      transition: transform .2s ease, box-shadow .2s ease;
       cursor: default;
-      &:hover { transform: scale(1.05); box-shadow: 0 10px 28px rgba(99,102,241,0.45); }
     }
     .user-name  { font-weight: 700; font-size: 1.15rem; color: var(--text-primary); }
     .user-email { color: var(--text-secondary); font-size: .875rem; margin-bottom: 16px; }

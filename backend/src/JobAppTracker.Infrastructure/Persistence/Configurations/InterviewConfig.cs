@@ -13,7 +13,7 @@ namespace JobAppTracker.Infrastructure.Persistence.Configurations
         {
             builder.ToTable("Interviews");
             builder.HasKey(i => i.Id);
-            builder.Property(i => i.InterviewerName).IsRequired().HasMaxLength(100);
+            builder.Property(i => i.InterviewerName).HasMaxLength(100);
 
             // Relationships
             builder

@@ -28,7 +28,7 @@ namespace JobAppTracker.Application.Behaviours
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled exception handling request {RequestName} {@Request}", typeof(TRequest).Name, request);
+                _logger.LogError(ex, "Unhandled exception handling request {RequestName}", typeof(TRequest).Name);
                 throw;
             }
         }

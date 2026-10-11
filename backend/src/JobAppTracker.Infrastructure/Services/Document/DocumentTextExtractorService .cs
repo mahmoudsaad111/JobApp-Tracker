@@ -9,10 +9,16 @@ namespace JobAppTracker.Infrastructure.Services.Documents;
 
 public class DocumentTextExtractorService : IDocumentTextExtractorService
 {
+    private readonly IFileStorageService _fileStorage;
+
+    public DocumentTextExtractorService(IFileStorageService fileStorage)
+    {
+        _fileStorage = fileStorage;
+    }
+
     public Task<string> ExtractTextAsync(string filePath, CancellationToken ct = default)
     {
-        var relative = filePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-        var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relative);
+        var fullPath = _fileStorage.GetPhysicalPath(filePath);
         if (!File.Exists(fullPath))
             throw new DomainException("Document file not found.");
 

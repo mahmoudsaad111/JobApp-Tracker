@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JobTracker Companion</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand"><span class="brand-icon">▰</span><span>JobTracker</span></div>
+    </header>
+
+    <section class="hero">
+      <div><p class="eyebrow">QUICK CAPTURE</p><h1>Save this job</h1><p class="muted" id="pageHint">Reading the current tab…</p></div>
+      <span class="connection-dot" id="connectionDot" title="Local queue"></span>
+    </section>
+
+    <form id="jobForm" class="card capture-card">
+      <label>Title<input id="title" required placeholder="e.g. Senior Product Designer"></label>
+      <div class="two-col">
+        <label>Company name<input id="company" required placeholder="Company name"></label>
+        <label>Location<input id="location" placeholder="Remote, Cairo…"></label>
+      </div>
+      <div class="two-col">
+        <label>Application date<input id="applicationDate" type="date" required></label>
+        <label>Status<select id="status"><option>Draft</option><option>Submitted</option><option>UnderReview</option><option>InterviewScheduled</option><option>Interviewed</option><option>Accepted</option><option>Rejected</option><option>Withdrawn</option></select></label>
+      </div>
+      <div class="two-col">
+        <label>Work mode<select id="workMode"><option>Remote</option><option>Hybrid</option><option>Onsite</option></select></label>
+        <label>Type<select id="jobType"><option>FullTime</option><option>PartTime</option><option>Contract</option><option>Internship</option><option>Freelance</option></select></label>
+      </div>
+      <label>Link<input id="link" type="url" placeholder="https://example.com/job-posting"></label>
+      <label>Description<textarea id="description" rows="3" placeholder="Job description or your notes about this role"></textarea></label>
+      <label>Required skills<input id="requiredSkills" placeholder="TypeScript, Angular, SQL (comma-separated)"></label>
+      <div class="form-actions"><button type="button" class="button secondary" id="clearButton">Clear</button><button type="button" class="button secondary" id="saveRemoteButton">Save to applications</button><button type="submit" class="button primary"><span>＋</span> Save locally</button></div>
+    </form>
+
+    <section class="section-heading"><div><p class="eyebrow">YOUR SHORTLIST</p><h2>Saved jobs <span class="count" id="count">0</span></h2></div><button class="text-button" id="exportButton">Export</button></section>
+    <section id="emptyState" class="empty card"><span class="empty-icon">☆</span><strong>Your shortlist is empty</strong><p>Capture a posting and it will stay here until you sync it.</p></section>
+    <section id="queue" class="queue"></section>
+
+    <p class="sync-status" id="syncStatus"></p>
+    <div class="toast" id="toast" role="status"></div>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -11,6 +11,7 @@ publish/
 *.log
 appsettings.Development.json
 appsettings.Local.json
+App_Data/
 secrets.json
 *.pfx
 *.p12
@@ -38,3 +39,4 @@ Thumbs.db
 *.bak
 .vercel
 .env*
+!.env.example

@@ -9,6 +9,7 @@ public class LoginUserCommandValidatorTests
     [Fact]
     public void Validator_Fails_On_Invalid_Email_Or_Password()
     {
+        
         var validator = new LoginUserCommandValidator();
         var command = new LoginUserCommand { Email = "not-an-email", Password = "123" };
 
