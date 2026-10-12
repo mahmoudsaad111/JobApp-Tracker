@@ -1,6 +1,6 @@
-if (chrome.sidePanel) chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
-
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
-  chrome.storage.local.get('settings').then(({ settings }) => { if (!settings) chrome.storage.local.set({ settings: { apiUrl: 'https://jobapptracker.tryasp.net/api' } }); });
+// The popup does all the work. The service worker only keeps the shortlist
+// storage ready after install / update.
+chrome.runtime.onInstalled.addListener(async () => {
+  const { jobs } = await chrome.storage.local.get('jobs');
+  if (!jobs) await chrome.storage.local.set({ jobs: [] });
 });

@@ -40,8 +40,6 @@ import { RouterOutlet } from '@angular/router';
     </div>
   `,
   styles: [`
-    @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
-
     .auth-wrapper {
       min-height: 100vh;
       display: flex;

@@ -8,6 +8,7 @@ import { MatButtonModule }           from '@angular/material/button';
 import { MatIconModule }             from '@angular/material/icon';
 import { MatProgressSpinnerModule }  from '@angular/material/progress-spinner';
 import { AuthService }               from '@core/services/auth.service';
+import { apiErrorMessage }           from '../../../core/utils/api-error';
 
 type ViewState = 'form' | 'success' | 'invalid';
 
@@ -26,7 +27,7 @@ type ViewState = 'form' | 'success' | 'invalid';
       <div class="auth-form">
         <h2>Link expired or invalid</h2>
         <p class="subtitle">
-          This password reset link is no longer valid. Links expire after 1 hour.
+          This password reset link is no longer valid. Links expire after 24 hours.
         </p>
         <button mat-stroked-button color="primary" class="w-full submit-btn"
                 routerLink="/auth/forgot-password">
@@ -239,22 +240,19 @@ export class ResetPasswordComponent implements OnInit {
       newPassword:        this.newPassword,
       confirmNewPassword: this.confirmPassword,
     }).subscribe({
-      next: res => {
+      next: () => {
         this.loading.set(false);
-        if (res.success) {
-          this.view.set('success');
-        } else {
-          const msg = res.message.toLowerCase();
-          if (msg.includes('invalid') || msg.includes('expired')) {
-            this.view.set('invalid');
-          } else {
-            this.errorMsg.set(res.message);
-          }
-        }
+        this.view.set('success');
       },
-      error: () => {
+      error: err => {
         this.loading.set(false);
-        this.errorMsg.set('Something went wrong. Please try again.');
+        // The API now answers a failed reset with HTTP 400 and a message.
+        const msg = apiErrorMessage(err, 'Something went wrong. Please try again.');
+        if (/invalid|expired/i.test(msg)) {
+          this.view.set('invalid');
+        } else {
+          this.errorMsg.set(msg);
+        }
       },
     });
   }

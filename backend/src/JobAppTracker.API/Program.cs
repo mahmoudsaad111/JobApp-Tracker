@@ -5,6 +5,7 @@ using JobAppTracker.Application;
 using JobAppTracker.Domain.Entities;
 using JobAppTracker.Infrastructure;
 using JobAppTracker.Infrastructure.Data;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -48,6 +49,20 @@ builder.Services.AddResponseCompression(options =>
     options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
 });
 
+// Behind a reverse proxy (nginx in Docker) the real client IP arrives in X-Forwarded-For.
+// Off by default: on IIS a client could fake that header and dodge the rate limiter.
+var useForwardedHeaders = builder.Configuration.GetValue<bool>("ForwardedHeaders:Enabled");
+if (useForwardedHeaders)
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        // The proxy is our own nginx container, so its address is not known in advance.
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+}
+
 // Add Rate limiter For better performance
 builder.Services.AddRateLimiter(options =>
 {
@@ -72,6 +87,11 @@ builder.Services.AddRateLimiter(options =>
 });
 
 var app = builder.Build();
+
+if (useForwardedHeaders)
+{
+    app.UseForwardedHeaders();
+}
 
 
 app.UseMiddleware<ExceptionMiddleware>();

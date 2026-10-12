@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Text.Json;
 using JobAppTracker.Application.Common.Exceptions;
 using JobAppTracker.Application.Common.Responses;
@@ -8,11 +8,17 @@ namespace JobAppTracker.API.Middlewares;
 
 public class ExceptionMiddleware
 {
-    private readonly RequestDelegate _next;
+    // camelCase (message, errors, ...) so errors look the same as normal API responses
+    // and the Angular app / extension can read them with the same property names.
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    public ExceptionMiddleware(RequestDelegate next)
+    private readonly RequestDelegate _next;
+    private readonly ILogger<ExceptionMiddleware> _logger;
+
+    public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
     {
         _next = next;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -27,7 +33,7 @@ public class ExceptionMiddleware
         }
     }
 
-    private static async Task HandleException(HttpContext context, Exception ex)
+    private async Task HandleException(HttpContext context, Exception ex)
     {
         var statusCode = HttpStatusCode.InternalServerError;
 
@@ -83,6 +89,14 @@ public class ExceptionMiddleware
                 );
                 break;
 
+            case ExternalServiceException externalEx:
+                // Expected when a provider is down: log as a warning, tell the user to retry.
+                _logger.LogWarning(externalEx, "External service failed");
+                statusCode = HttpStatusCode.ServiceUnavailable;
+
+                response = ApiResponse<object>.FailureResult(externalEx.Errors, externalEx.Message);
+                break;
+
             case DomainException domainEx:
                 statusCode = HttpStatusCode.BadRequest;
 
@@ -90,15 +104,28 @@ public class ExceptionMiddleware
                 break;
 
             default:
+                // Unexpected: this is the only place the real cause can be recorded.
+                _logger.LogError(
+                    ex,
+                    "Unhandled exception on {Method} {Path}",
+                    context.Request.Method,
+                    context.Request.Path
+                );
                 statusCode = HttpStatusCode.InternalServerError;
 
                 response = ApiResponse<object>.FailureResult(null, "Internal server error");
                 break;
         }
 
+        // Response already started (for example while streaming a file): we can't change it.
+        if (context.Response.HasStarted)
+        {
+            return;
+        }
+
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
 
-        await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response, JsonOptions));
     }
 }

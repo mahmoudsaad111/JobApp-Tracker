@@ -11,11 +11,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      console.log('Request URL:', req.url);        // ← which url failed
-      console.log('Error status:', error.status);  // ← what error
-      console.log('Error body:', error.error);  
-      if (error.status === 401) {
-         
+      // A 401 on the login form just means "wrong password" — it is not an expired session.
+      const isLoginAttempt = req.url.toLowerCase().includes('/auth/login');
+      if (error.status === 401 && !isLoginAttempt) {
         // Cookie expired or invalid — just logout, no refresh needed
         authService.clearSession();
       }

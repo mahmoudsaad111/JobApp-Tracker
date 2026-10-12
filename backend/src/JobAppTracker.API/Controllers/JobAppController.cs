@@ -1,4 +1,4 @@
-﻿using JobAppTracker.Application.Common.Responses;
+using JobAppTracker.Application.Common.Responses;
 using JobAppTracker.Application.Features.JobApp.Commands;
 using JobAppTracker.Application.Features.JobApp.Dtos;
 using JobAppTracker.Application.Features.JobApp.Queries;
@@ -29,7 +29,7 @@ namespace JobAppTracker.API.Controllers
             );
         }
 
-        [HttpGet("{JobAppId}")]
+        [HttpGet("{JobAppId:guid}")]
         public async Task<IActionResult> GetJobAppById([FromRoute] Guid JobAppId)
         {
             var result = await _mediator.Send(new GetJobAppByIdQuery { JobAppId = JobAppId });
@@ -39,35 +39,36 @@ namespace JobAppTracker.API.Controllers
             );
         }
 
-        [HttpDelete("{JobAppId}")]
-        public async Task<IActionResult> DeleteJobAppById([FromRoute] string JobAppId)
+        // Guid route parameters: an invalid id is a clean 404/400 from routing, not a 500 from Guid.Parse.
+        [HttpDelete("{JobAppId:guid}")]
+        public async Task<IActionResult> DeleteJobAppById([FromRoute] Guid JobAppId)
         {
             var result = await _mediator.Send(
-                new DeleteJobAppByIdCommand { JobAppId = Guid.Parse(JobAppId) }
+                new DeleteJobAppByIdCommand { JobAppId = JobAppId }
             );
 
             return Ok(ApiResponse<object>.SuccessResult(result, "JobApp Deleted Successfully"));
         }
 
-        [HttpPut("{JobAppId}")]
+        [HttpPut("{JobAppId:guid}")]
         public async Task<IActionResult> UpdateJobApp(
-            [FromRoute] string JobAppId,
+            [FromRoute] Guid JobAppId,
             [FromBody] UpdateJobAppCommand command
         )
         {
-            command.JobAppId = Guid.Parse(JobAppId);
+            command.JobAppId = JobAppId;
             var result = await _mediator.Send(command);
 
             return Ok(ApiResponse<object>.SuccessResult(result, "JobApp Updated Successfully"));
         }
 
-        [HttpPatch("{JobAppId}/status")]
+        [HttpPatch("{JobAppId:guid}/status")]
         public async Task<IActionResult> UpdateJobAppStatus(
-            [FromRoute] string JobAppId,
+            [FromRoute] Guid JobAppId,
             [FromBody] UpdateJobAppStatusCommand command
         )
         {
-            command.JobAppId = Guid.Parse(JobAppId);
+            command.JobAppId = JobAppId;
             var result = await _mediator.Send(command);
 
             return Ok(

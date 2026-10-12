@@ -37,7 +37,7 @@ namespace JobAppTracker.Application.Features.JobApp.Handlers
             jobApp.UpdateDetails(
                 companyName: request.CompanyName,
                 title: request.Title,
-                appliedAt: jobApp.AppliedAt,
+                appliedAt: request.ApplicationDate ?? jobApp.AppliedAt,
                 type: request.Type,
                 workMode: request.WorkMode,
                 location: request.Location,

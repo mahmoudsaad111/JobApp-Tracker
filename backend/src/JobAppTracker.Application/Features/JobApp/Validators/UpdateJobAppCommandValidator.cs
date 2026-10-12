@@ -18,7 +18,7 @@ namespace JobAppTracker.Application.Features.JobApp.Validators
                 .MaximumLength(200).WithMessage("Title is too long (max 200 chars)");
 
             RuleFor(x => x.Description)
-                .MaximumLength(4000).WithMessage("Description is too long (max 4000 chars)");
+                .MaximumLength(1000).WithMessage("Description is too long (max 1000 chars)");
         }
     }
 }

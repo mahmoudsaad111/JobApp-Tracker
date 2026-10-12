@@ -639,7 +639,7 @@ interface EditForm {
       mat-icon { font-size: 16px; width: 16px; height: 16px; }
       &:last-child { border-right: none; }
       &:hover:not(.filter-toggle-btn--active) { background: var(--surface-2, #f8fafc); }
-      &--active { background: var(--primary-soft, #e0e7ff); color: var(--primary-dark, #4338ca); }
+      &.filter-toggle-btn--active { background: var(--primary-soft, #e0e7ff); color: var(--primary-dark, #4338ca); }
     }
     :host-context(.dark) .filter-toggle {
       border-color: var(--border-color, #334155);
@@ -649,7 +649,7 @@ interface EditForm {
       border-right-color: var(--border-color, #334155);
       color: var(--text-secondary, #94a3b8);
       &:hover:not(.filter-toggle-btn--active) { background: rgba(255,255,255,.04); }
-      &--active { background: #312e81; color: #c7d2fe; }
+      &.filter-toggle-btn--active { background: #312e81; color: #c7d2fe; }
     }
 
     /* Grid */

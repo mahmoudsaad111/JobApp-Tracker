@@ -12,8 +12,10 @@ namespace JobAppTracker.Application.Features.JobApp.Commands
         public Guid JobAppId { get; set; }
         public string CompanyName { get; set; }
         public string Title { get; set; }
-        public string Location { get; set; }
+        public string? Location { get; set; }
         public string? JobLink { get; set; }
+        // Optional: when missing, the existing applied date is kept.
+        public DateTime? ApplicationDate { get; set; }
         public JobAppStatus Status { get; set; }
         public string Description { get; set; }
 

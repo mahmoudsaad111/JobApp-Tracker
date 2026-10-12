@@ -1,10 +1,7 @@
-﻿using System.Security.Claims;
 using JobAppTracker.Application.Common.Responses;
 using JobAppTracker.Application.Features.Notes.Commands;
 using JobAppTracker.Application.Features.Notes.Dtos;
 using JobAppTracker.Application.Features.Notes.Queries;
-using JobAppTracker.Application.Interfaces;
-using JobAppTracker.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -36,26 +33,22 @@ namespace JobAppTracker.API.Controllers
             );
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteNote(string id)
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> DeleteNote(Guid id)
         {
-            var result = await _mediator.Send(new DeleteNoteCommand { NoteId = Guid.Parse(id) });
+            var result = await _mediator.Send(new DeleteNoteCommand { NoteId = id });
             return Ok(
                 ApiResponse<DeleteNoteDto>.SuccessResult(result, "Note deleted successfully.")
             );
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetNote(string id)
-        {
-            var result = await _mediator.Send(new GetNoteQuery { NoteId = Guid.Parse(id) });
-            return Ok(ApiResponse<GetNoteDto>.SuccessResult(result, "Success"));
-        }
+        // (The old GET api/notes/{id} endpoint was removed: it had no handler, so it always failed.
+        //  The app loads notes through GET api/notes.)
 
         [HttpPut("{id:guid}")]
-        public async Task<IActionResult> Update(string id, [FromBody] UpdateNoteCommand command)
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateNoteCommand command)
         {
-            command.NoteId = Guid.Parse(id);
+            command.NoteId = id;
             var result = await _mediator.Send(command);
             return Ok(
                 ApiResponse<UpdateNoteDto>.SuccessResult(result, "Note updated successfully.")

@@ -30,10 +30,7 @@ register(body: RegisterRequest): Observable<ApiResponse<void>> {
 login(body: LoginRequest): Observable<ApiResponse<UserProfile>> {
   return this.http.post<ApiResponse<UserProfile>>(`${environment.apiUrl}/auth/login`, body)
     .pipe(tap(res => {
-      console.log('Login response:', res);        // ← what does this show?
-      console.log('res.data:', res.data);         // ← is this null or undefined?
       this._currentUser.set(res.data);
-      console.log(this.currentUser()) ;
       localStorage.setItem(this.USER_KEY, JSON.stringify(res.data));
     }));
 }
@@ -60,7 +57,7 @@ resetPassword(payload: {
   }
 // ─── Resend Verification ────────────────────────────────────────────────────
 resendVerification(email: string): Observable<ApiResponse<void>> {
-  return this.http.post<ApiResponse<void>>(`${environment.apiUrl}/auth/resend-verification`, { email });
+  return this.http.post<ApiResponse<void>>(`${environment.apiUrl}/auth/ResendConfirmationEmail`, { email });
 }
 
 // ─── Change Password ────────────────────────────────────────────────────

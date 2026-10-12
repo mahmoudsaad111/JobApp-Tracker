@@ -37,13 +37,13 @@ public class WebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
        // Seed a test user  
         UserManager<User> userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
         var user = User.Create(
-                email: "mahmoudsaad87871@gmail.com",
+                email: "integration-test@jobapptracker.local",
                 firstName: "Mahmoud",
                 lastName: "Saad"    
             );
         user.EmailConfirmed=true; 
 
-           var result = await userManager.CreateAsync(user, "Msd@123456");
+           var result = await userManager.CreateAsync(user, "TestOnlyPassword123!");
 
             if (!result.Succeeded)
             {

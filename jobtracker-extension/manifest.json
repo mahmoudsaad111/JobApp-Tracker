@@ -1,20 +1,13 @@
 {
   "manifest_version": 3,
   "name": "JobTracker Companion",
-  "version": "1.0.0",
-  "description": "Capture job postings, keep an offline shortlist, and sync them with JobTracker.",
+  "version": "1.1.0",
+  "description": "Capture job postings from any page and save them to your JobTracker account.",
   "action": {
-    "default_title": "Open JobTracker Companion"
+    "default_title": "Save this job to JobTracker",
+    "default_popup": "popup.html"
   },
-  "side_panel": { "default_path": "popup.html" },
-  "background": { "service_worker": "background.js", "type": "module" },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
-    }
-  ],
-  "permissions": ["activeTab", "storage", "tabs", "scripting", "cookies", "sidePanel"],
-  "host_permissions": ["<all_urls>"]
+  "background": { "service_worker": "background.js" },
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["https://jobapptracker.tryasp.net/*"]
 }
