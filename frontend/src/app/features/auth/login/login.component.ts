@@ -10,6 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { apiErrorMessage } from '../../../core/utils/api-error';
 
 @Component({
   selector: 'app-login',
@@ -57,6 +58,12 @@ import { NotificationService } from '../../../core/services/notification.service
             <mat-icon>error_outline</mat-icon>
             {{ errorMessage }}
           </div>
+        }
+
+        @if (needsConfirmation) {
+          <button mat-stroked-button type="button" class="w-full" (click)="resend()" [disabled]="resending || resent">
+            {{ resent ? 'Confirmation email sent' : (resending ? 'Sending...' : 'Resend confirmation email') }}
+          </button>
         }
 
         <button mat-flat-button color="primary" class="w-full submit-btn" type="submit" [disabled]="loading">
@@ -220,11 +227,29 @@ export class LoginComponent {
   loading      = false;
   showPwd      = false;
   errorMessage = '';
+  needsConfirmation = false;
+  resending = false;
+  resent = false;
+
+  resend(): void {
+    const email = this.form.getRawValue().email;
+    if (!email) return;
+    this.resending = true;
+    this.auth.resendVerification(email).subscribe({
+      next: () => { this.resending = false; this.resent = true; },
+      error: err => {
+        this.resending = false;
+        this.errorMessage = apiErrorMessage(err, 'Could not send the email. Try again later.');
+      }
+    });
+  }
 
   submit(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.loading      = true;
     this.errorMessage = '';
+    this.needsConfirmation = false;
+    this.resent = false;
 
     this.auth.login(this.form.getRawValue()).subscribe({
       next: () => {
@@ -233,7 +258,8 @@ export class LoginComponent {
       },
       error: err => {
         this.loading = false;
-        this.errorMessage = err.error?.message ?? 'Invalid email or password.';
+        this.errorMessage = apiErrorMessage(err, 'Invalid email or password.');
+        this.needsConfirmation = /confirm your email/i.test(this.errorMessage);
       },
       complete: () => { this.loading = false; }
     });

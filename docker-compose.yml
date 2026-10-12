@@ -25,10 +25,12 @@ services:
       - Email__SmtpServer=smtp.gmail.com
       - Email__Port=587
       - Email__SenderName=JobAppTracker
-      - Email__SenderEmail=mahmoudsaad87871@gmail.com
+      - Email__SenderEmail=${EMAIL_SENDER_EMAIL:-no-reply@jobapptracker.local}
       - Email__Password=${EMAIL_PASSWORD}
       # ── Frontend ───────────────────────────────────────────
       - Frontend__BaseUrl=http://localhost:4200
+      # nginx sits in front of the API: trust X-Forwarded-For so rate limits are per real client
+      - ForwardedHeaders__Enabled=true
       # ── External Services ──────────────────────────────────
       - Gemini__ApiKey=${Gemini__ApiKey}
     volumes:

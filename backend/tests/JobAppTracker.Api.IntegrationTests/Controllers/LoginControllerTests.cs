@@ -20,7 +20,7 @@ public class LoginControllerTests (WebAppFactory webAppFactory)
     // Arrange
     var client = webAppFactory.CreateClient();
      // Act
-    var response = await client.PostAsJsonAsync("/api/auth/login", new LoginUserCommand{ Email = "mahmoudsaad87871@gmail.com", Password = "Msd@123456" });
+    var response = await client.PostAsJsonAsync("/api/auth/login", new LoginUserCommand{ Email = "integration-test@jobapptracker.local", Password = "TestOnlyPassword123!" });
  
     // Assert
     response.EnsureSuccessStatusCode();

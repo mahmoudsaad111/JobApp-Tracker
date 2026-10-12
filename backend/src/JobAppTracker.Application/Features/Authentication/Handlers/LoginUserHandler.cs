@@ -45,6 +45,18 @@ namespace JobAppTracker.Application.Features.Authentication.Handlers
             {
                 throw new UnauthorizedException("Too many failed attempts. Try again in 15 minutes.");
             }
+            if (result.IsNotAllowed)
+            {
+                // Email not confirmed. Only tell someone who actually knows the password,
+                // so this message can't be used to discover which emails have accounts.
+                if (await _usermanager.CheckPasswordAsync(user, request.Password))
+                {
+                    throw new UnauthorizedException(
+                        "Please confirm your email before signing in. Check your inbox for the link."
+                    );
+                }
+                throw new UnauthorizedException("Invalid email or password");
+            }
             if (!result.Succeeded)
             {
                 throw new UnauthorizedException("Invalid email or password");

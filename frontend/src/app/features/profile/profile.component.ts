@@ -70,11 +70,7 @@ import { DocumentsService, DocumentDto } from '../../core/services/document.serv
                   <mat-icon matPrefix>email</mat-icon>
                 </mat-form-field>
               </div>
-              <div class="form-actions">
-                <button mat-flat-button color="primary" type="submit" [disabled]="saving">
-                  @if (saving) { <mat-spinner diameter="18"/> } @else { Save Changes }
-                </button>
-              </div>
+              <p class="nav-sub">Your name and email can't be changed yet.</p>
             </form>
 
             <hr class="divider">
@@ -340,6 +336,7 @@ export class ProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.form.patchValue({ name: this.auth.userName(), email: this.auth.userEmail() });
+    this.form.disable();
     this.loadNoteCount();
     this.loadDocCount();
   }
@@ -358,7 +355,12 @@ export class ProfileComponent implements OnInit {
         this.pwForm.reset();
         this.savingPw = false;
       },
-      error: () => { this.savingPw = false; },
+      error: err => {
+        this.savingPw = false;
+        const e = err?.error;
+        const msg = e?.message ?? (Array.isArray(e?.errors) ? e.errors.join(' ') : null);
+        if (msg) this.notify.error(msg);
+      },
     });
   }
 

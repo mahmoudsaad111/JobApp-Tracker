@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
 import { ApplicationsService } from '../../../core/services/applications.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { apiErrorMessage } from '../../../core/utils/api-error';
 import { APPLICATION_STATUSES, JOB_TYPES, WORK_MODES, JobType, WorkMode, ParsedJobPosting } from '../../../core/models';
 
 @Component({
@@ -77,7 +78,7 @@ import { APPLICATION_STATUSES, JOB_TYPES, WORK_MODES, JobType, WorkMode, ParsedJ
             <div class="form-grid">
               <mat-form-field appearance="outline">
                 <mat-label>Company Name *</mat-label>
-                <input matInput formControlName="CompanyName" placeholder="e.g. Google">
+                <input matInput formControlName="CompanyName" maxlength="200" placeholder="e.g. Google">
                 <mat-icon matPrefix>business</mat-icon>
                 @if (form.get('CompanyName')?.hasError('required') && form.get('CompanyName')?.touched) {
                   <mat-error>Company name is required</mat-error>
@@ -86,7 +87,7 @@ import { APPLICATION_STATUSES, JOB_TYPES, WORK_MODES, JobType, WorkMode, ParsedJ
 
               <mat-form-field appearance="outline">
                 <mat-label>Job Title *</mat-label>
-                <input matInput formControlName="Title" placeholder="e.g. Frontend Developer">
+                <input matInput formControlName="Title" maxlength="200" placeholder="e.g. Frontend Developer">
                 <mat-icon matPrefix>work</mat-icon>
                 @if (form.get('Title')?.hasError('required') && form.get('Title')?.touched) {
                   <mat-error>Job title is required</mat-error>
@@ -94,8 +95,8 @@ import { APPLICATION_STATUSES, JOB_TYPES, WORK_MODES, JobType, WorkMode, ParsedJ
               </mat-form-field>
 
               <mat-form-field appearance="outline">
-                <mat-label>Location *</mat-label>
-                <input matInput formControlName="Location" placeholder="e.g. London, UK / Remote">
+                <mat-label>Location</mat-label>
+                <input matInput formControlName="Location" maxlength="255" placeholder="e.g. London, UK / Remote">
                 <mat-icon matPrefix>location_on</mat-icon>
                 @if (form.get('Location')?.hasError('required') && form.get('Location')?.touched) {
                   <mat-error>Location is required</mat-error>
@@ -125,7 +126,7 @@ import { APPLICATION_STATUSES, JOB_TYPES, WORK_MODES, JobType, WorkMode, ParsedJ
 
               <mat-form-field appearance="outline">
                 <mat-label>Job Link (optional)</mat-label>
-                <input matInput formControlName="Link" placeholder="https://…">
+                <input matInput formControlName="Link" maxlength="500" placeholder="https://…">
                 <mat-icon matPrefix>link</mat-icon>
               </mat-form-field>
 
@@ -158,7 +159,7 @@ import { APPLICATION_STATUSES, JOB_TYPES, WORK_MODES, JobType, WorkMode, ParsedJ
 
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Description (optional)</mat-label>
-                <textarea matInput formControlName="Description" rows="4"
+                <textarea matInput formControlName="Description" rows="4" maxlength="1000"
                   placeholder="Recruiter contact, salary expectations, preparation Description…"></textarea>
                 <mat-icon matPrefix>description</mat-icon>
               </mat-form-field>
@@ -265,8 +266,8 @@ export class ApplicationFormComponent implements OnInit {
   form = this.fb.nonNullable.group({
     CompanyName:     ['', Validators.required],
     Title:           ['', Validators.required],
-    Location:        ['', Validators.required],
-    Status:          ['Saved' as typeof APPLICATION_STATUSES[number], Validators.required],
+    Location:        [''],
+    Status:          ['Submitted' as typeof APPLICATION_STATUSES[number], Validators.required],
     ApplicationDate: [new Date(), Validators.required],
     Link:            [''],
     Type:            ['FullTime' as JobType],
@@ -280,57 +281,57 @@ export class ApplicationFormComponent implements OnInit {
     this.parsing = true;
     this.svc.parseJobPosting({ rawText: this.rawJobText }).subscribe({
       next: (res) => {
-        console.log('API response:', JSON.stringify(res));
+        
         this.applyParsedData(res.data);
         this.parsing = false;
         this.showParser = false;
         this.notify.success('Job posting parsed successfully');
       },
       error: (err) => {
-        console.error('Parse error:', err);
+        
         this.parsing = false;
-        this.notify.error('Failed to parse job posting');
+        this.notify.error(apiErrorMessage(err, 'Failed to parse job posting'));
       }
     });
   }
 
   private applyParsedData(parsed: ParsedJobPosting): void {
-    console.log('applyParsedData received:', JSON.stringify(parsed));
+    
     if (!parsed) {
-      console.warn('parsed is null/undefined');
+      
       return;
     }
     const patch: Partial<Record<string, unknown>> = {};
     if (parsed.companyName) {
-      console.log('setting CompanyName to:', parsed.companyName);
+      
       patch['CompanyName'] = parsed.companyName;
     }
     if (parsed.jobTitle) {
-      console.log('setting Title to:', parsed.jobTitle);
+      
       patch['Title'] = parsed.jobTitle;
     }
     if (parsed.location) {
-      console.log('setting Location to:', parsed.location);
+      
       patch['Location'] = parsed.location;
     }
     if (parsed.requiredSkills?.length) {
       const skills = parsed.requiredSkills.join(', ');
-      console.log('setting RequiredSkills to:', skills);
+      
       patch['RequiredSkills'] = skills;
     }
 
     const workModeValues: WorkMode[] = ['Onsite', 'Remote', 'Hybrid'];
     if (parsed.jobType && workModeValues.includes(parsed.jobType as WorkMode)) {
-      console.log('setting WorkMode to:', parsed.jobType);
+      
       patch['WorkMode'] = parsed.jobType as WorkMode;
     } else if (parsed.jobType && JOB_TYPES.includes(parsed.jobType as JobType)) {
-      console.log('setting Type to:', parsed.jobType);
+      
       patch['Type'] = parsed.jobType as JobType;
     }
 
-    console.log('patch object:', JSON.stringify(patch));
+    
     this.form.patchValue(patch);
-    console.log('form value after patch:', JSON.stringify(this.form.value));
+    
   }
 
   ngOnInit(): void {
@@ -391,7 +392,11 @@ export class ApplicationFormComponent implements OnInit {
         this.notify.success(this.isEdit ? 'Application updated.' : 'Application added!');
         this.router.navigate(['/applications']);
       },
-      error: () => { this.loading = false; }
+      error: (err) => {
+        this.loading = false;
+        // Show the server's reason (for example "link cannot exceed 500 characters").
+        this.notify.error(apiErrorMessage(err, 'Could not save the application. Please try again.'));
+      }
     });
   }
 }

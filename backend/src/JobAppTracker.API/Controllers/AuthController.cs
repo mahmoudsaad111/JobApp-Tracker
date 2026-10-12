@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Security.Claims;
 
 namespace JobAppTracker.API.Controllers
 {
@@ -37,7 +38,12 @@ namespace JobAppTracker.API.Controllers
         public async Task<IActionResult> Register(RegisterUserCommand command)
         {
             var result = await _mediator.Send(command);
-            return Ok(ApiResponse<object>.SuccessResult(result.Email, "Registration successful"));
+            return Ok(
+                ApiResponse<object>.SuccessResult(
+                    new { email = result.Email, emailSent = result.EmailSent },
+                    "Registration successful"
+                )
+            );
         }
 
         [HttpPost("Login")]
@@ -87,6 +93,32 @@ namespace JobAppTracker.API.Controllers
         {
             var result = await _mediator.Send(command);
             return Ok(ApiResponse<object>.SuccessResult(result, "Password reset email sent"));
+        }
+
+        // Lightweight "am I logged in?" check (used by the browser extension).
+        // 200 when the session cookie is valid, 401 otherwise.
+        [Authorize]
+        [HttpGet("Me")]
+        [DisableRateLimiting]
+        public async Task<IActionResult> Me()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user is null)
+                return Unauthorized();
+            var roles = await _userManager.GetRolesAsync(user);
+            return Ok(
+                ApiResponse<object>.SuccessResult(
+                    new
+                    {
+                        userId = user.Id,
+                        firstName = user.FirstName,
+                        lastName = user.LastName,
+                        email = user.Email,
+                        role = roles.FirstOrDefault(),
+                    },
+                    "Authenticated"
+                )
+            );
         }
 
         [Authorize]

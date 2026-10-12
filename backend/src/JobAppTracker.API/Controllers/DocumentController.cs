@@ -71,8 +71,8 @@ namespace JobAppTracker.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteDocument(string id) { 
-          var result = await _mediator.Send(new DeleteDocumentCommand { DocumentId = Guid.Parse(id) });
+        public async Task<IActionResult> DeleteDocument(Guid id) { 
+          var result = await _mediator.Send(new DeleteDocumentCommand { DocumentId = id });
           return Ok(ApiResponse<DeleteDocumentDto>.SuccessResult(
             result,
             "Document deleted successfully."

@@ -55,11 +55,11 @@ namespace JobAppTracker.API.Controllers
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateInterview(
-            string id,
+            Guid id,
             [FromBody] UpdateInterviewCommand command
         )
         {
-            command.InterviewId = Guid.Parse(id);
+            command.InterviewId = id;
             var result = await _mediator.Send(command);
             return Ok(ApiResponse<UpdateInterviewDto>.SuccessResult(result, "success"));
         }

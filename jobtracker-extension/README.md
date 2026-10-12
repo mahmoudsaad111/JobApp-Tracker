@@ -1,28 +1,39 @@
 # JobTracker Companion Extension
 
-Standalone Chrome/Edge Manifest V3 extension for the JobAppTracker project. It intentionally lives outside `frontend/` and does not require changes to the Angular application.
+The JobTracker Companion is a standalone Chrome/Edge Manifest V3 extension for capturing a job posting while browsing and saving it to the signed-in JobTracker account.
 
-## Features
+It intentionally lives outside the Angular application and does not require changes to the existing frontend or backend source files.
 
-- Captures title, company, location, description, and skills from the active job page using JSON-LD, Open Graph metadata, semantic selectors, and the JobTracker server parser.
-- Saves a local offline shortlist in browser storage.
-- Opens captured postings again, removes saved items, and exports the shortlist as JSON.
-- Uses one-click authentication: saving an application opens the public login page only when needed, then the same Save action completes the application after sign-in.
-- Parses postings through the public `POST https://jobapptracker.tryasp.net/api/job-postings/parse` endpoint.
-- Syncs pending items with the public `POST https://jobapptracker.tryasp.net/api/JobApp` endpoint.
-- Uses the existing JobTracker visual language: charcoal navigation, compact blue actions, square cards, restrained borders, and light grey workspace background.
-- Opens as a persistent Chrome/Edge side panel so it stays available while switching between job tabs.
+## What it does
+
+- Opens as a persistent browser side panel.
+- Reads the active job page and refreshes when the job changes inside the same tab.
+- Uses LinkedIn-aware extraction for title, company, location, description, and skills.
+- Keeps the actual JobTracker application fields: company, title, application date, type, location, link, status, description, work mode, and required skills.
+- Saves directly to `POST https://jobapptracker.tryasp.net/api/JobApp`.
+- If the user is signed out, **Save to applications** preserves the completed form and opens the public JobTracker login page. After signing in, returning to the extension and clicking **Save to applications** completes the save.
+- Provides **Save locally** for an offline shortlist and JSON export.
+
+## Authentication model
+
+The current JobTracker backend uses an HttpOnly ASP.NET Identity session cookie rather than an OAuth access token. The extension never asks for or stores a password. API requests are executed in the authenticated JobTracker tab so the existing project session is used.
 
 ## Install locally
 
 1. Open `chrome://extensions` or `edge://extensions`.
 2. Enable **Developer mode**.
-3. Choose **Load unpacked** and select this folder.
-4. Click the extension icon and choose **Open in side panel** if the browser shows that option.
-5. Switch between job tabs; the side panel stays open and refreshes the captured fields for the active tab.
-6. Click **Save to applications**. If you are signed out, the extension opens the public login page and temporarily keeps the completed form.
-7. Sign in, return to the extension, and click **Save to applications** again. No connection or token step is required.
+3. Choose **Load unpacked**.
+4. Select this `jobtracker-extension` folder.
+5. Click the extension icon and open it in the browser side panel.
+6. Open a job posting, review the captured fields, and choose **Save to applications**.
 
-The current backend uses an HttpOnly session cookie rather than an OAuth access token. This extension therefore connects through the existing project session and never asks for or stores your email/password.
+Reload the extension after changing its files. LinkedIn may require the job description to be expanded with **Show more** before it becomes available to the page extractor.
 
-The extension is intentionally self-contained. Existing project files were not modified.
+## Files
+
+- `manifest.json` — Manifest V3 permissions, side-panel configuration, and content-script registration.
+- `popup.html` — Side-panel markup.
+- `popup.css` — JobTracker visual styling.
+- `popup.js` — Capture, pending-save, local shortlist, and API workflow.
+- `content.js` — Job-page extraction and dynamic-page change detection.
+- `background.js` — Side-panel activation and extension initialization.

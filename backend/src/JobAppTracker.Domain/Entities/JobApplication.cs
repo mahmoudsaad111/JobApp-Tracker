@@ -208,8 +208,11 @@ namespace JobAppTracker.Domain.Entities
             if (string.IsNullOrWhiteSpace(link))
                 return;
 
-            if (!Uri.TryCreate(link, UriKind.Absolute, out _))
-                throw new DomainException("Link must be a valid absolute URL.");
+            if (
+                !Uri.TryCreate(link, UriKind.Absolute, out var uri)
+                || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+            )
+                throw new DomainException("Link must be a valid http or https URL.");
         }
 
         private static string? NormalizeOptional(string? value) =>

@@ -17,22 +17,27 @@
       <span class="connection-dot" id="connectionDot" title="Local queue"></span>
     </section>
 
+    <section class="auth-bar" id="authBar">
+      <div id="authSignedOut" class="auth-row hidden"><span>Not signed in. Sign in, then click the extension again.</span><button type="button" class="button primary small" id="loginButton">Sign in</button></div>
+      <div id="authSignedIn" class="auth-row hidden"><span>Signed in as <strong id="userEmail"></strong></span><button type="button" class="button secondary small hidden" id="aiButton">Auto-fill with AI</button></div>
+    </section>
+
     <form id="jobForm" class="card capture-card">
-      <label>Title<input id="title" required placeholder="e.g. Senior Product Designer"></label>
+      <label>Title<input id="title" required maxlength="200" placeholder="e.g. Senior Product Designer"></label>
       <div class="two-col">
-        <label>Company name<input id="company" required placeholder="Company name"></label>
+        <label>Company name<input id="company" required maxlength="200" placeholder="Company name"></label>
         <label>Location<input id="location" placeholder="Remote, Cairo…"></label>
       </div>
       <div class="two-col">
         <label>Application date<input id="applicationDate" type="date" required></label>
-        <label>Status<select id="status"><option>Draft</option><option>Submitted</option><option>UnderReview</option><option>InterviewScheduled</option><option>Interviewed</option><option>Accepted</option><option>Rejected</option><option>Withdrawn</option></select></label>
+        <label title="Saved jobs are not counted on the dashboard until you set them to Submitted">Status<select id="status"><option value="Draft">Saved (not applied yet)</option><option value="Submitted">Submitted</option><option>UnderReview</option><option>InterviewScheduled</option><option>Interviewed</option><option>Accepted</option><option>Rejected</option><option>Withdrawn</option></select></label>
       </div>
       <div class="two-col">
         <label>Work mode<select id="workMode"><option>Remote</option><option>Hybrid</option><option>Onsite</option></select></label>
         <label>Type<select id="jobType"><option>FullTime</option><option>PartTime</option><option>Contract</option><option>Internship</option><option>Freelance</option></select></label>
       </div>
-      <label>Link<input id="link" type="url" placeholder="https://example.com/job-posting"></label>
-      <label>Description<textarea id="description" rows="3" placeholder="Job description or your notes about this role"></textarea></label>
+      <label>Link<input id="link" type="url" maxlength="500" placeholder="https://example.com/job-posting"></label>
+      <label>Description<textarea id="description" rows="6" maxlength="1000" placeholder="Job description or your notes about this role"></textarea></label>
       <label>Required skills<input id="requiredSkills" placeholder="TypeScript, Angular, SQL (comma-separated)"></label>
       <div class="form-actions"><button type="button" class="button secondary" id="clearButton">Clear</button><button type="button" class="button secondary" id="saveRemoteButton">Save to applications</button><button type="submit" class="button primary"><span>＋</span> Save locally</button></div>
     </form>

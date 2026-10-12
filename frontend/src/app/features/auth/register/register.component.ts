@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { apiErrorMessage } from '../../../core/utils/api-error';
 
 function passwordMatch(g: AbstractControl) {
   const pw  = g.get('password')?.value;
@@ -38,7 +39,14 @@ function passwordMatch(g: AbstractControl) {
         We sent a verification link to<br>
         <strong>{{ registeredEmail }}</strong>
       </p>
-      <p class="hint">Please confirm your email to activate your account.</p>
+      @if (!emailSent) {
+        <p class="hint warn">We couldn't send the email right now. Use the button below to try again.</p>
+      } @else {
+        <p class="hint">Please confirm your email to activate your account.</p>
+      }
+      <button mat-stroked-button type="button" class="w-full resend-btn" (click)="resend()" [disabled]="resending || resent">
+        {{ resent ? 'Confirmation email sent' : (resending ? 'Sending...' : 'Resend confirmation email') }}
+      </button>
       <a routerLink="/auth/login" mat-flat-button color="primary" class="w-full submit-btn">
         Go to Sign In
       </a>
@@ -174,6 +182,8 @@ function passwordMatch(g: AbstractControl) {
     .success-state .hint {
       color: #94a3b8; font-size: .8rem; margin: 0 0 24px;
     }
+    .success-state .hint.warn { color: #b45309; }
+    .resend-btn { margin-bottom: 12px; }
     @keyframes scaleIn {
       from { opacity: 0; transform: scale(0.94); }
       to   { opacity: 1; transform: scale(1); }
@@ -197,6 +207,21 @@ export class RegisterComponent {
   errorMessage = ''; 
   registered  = false;
   registeredEmail = '';
+  emailSent = true;
+  resending = false;
+  resent = false;
+
+  resend(): void {
+    this.resending = true;
+    this.auth.resendVerification(this.registeredEmail).subscribe({
+      next: () => { this.resending = false; this.resent = true; this.emailSent = true; },
+      error: err => {
+        this.resending = false;
+        this.notify.error(apiErrorMessage(err, 'Could not send the email. Try again later.'));
+      }
+    });
+  }
+
   submit(): void {
 
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
@@ -204,14 +229,15 @@ export class RegisterComponent {
     const { firstName,lastName, email, password } = this.form.getRawValue();
 
     this.auth.register({ firstName,lastName, email, password }).subscribe({
-      next: () => {
+      next: (res: any) => {
+         this.emailSent = res?.data?.emailSent !== false;
          this.registered = true;
          this.registeredEmail = email;  // ← comes from the form right here
          this.loading = false;
       },
       error: err => {
         this.loading = false;
-        this.errorMessage = err.error?.message ?? 'Registration failed. Please try again.';
+        this.errorMessage = apiErrorMessage(err, 'Registration failed. Please try again.');
       },
       complete: () => { this.loading = false; }
     });
