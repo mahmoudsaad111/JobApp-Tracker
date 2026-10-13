@@ -16,8 +16,13 @@ export function apiErrorMessage(err: unknown, fallback: string): string {
     for (const e of errors) if (typeof e === 'string' && e.trim()) parts.push(e.trim());
   } else if (errors && typeof errors === 'object') {
     for (const v of Object.values(errors as Record<string, unknown>)) {
-      if (Array.isArray(v)) for (const e of v) if (typeof e === 'string') parts.push(e);
-      else if (typeof v === 'string') parts.push(v);
+      if (Array.isArray(v)) {
+        for (const e of v) {
+          if (typeof e === 'string') parts.push(e);
+        }
+      } else if (typeof v === 'string') {
+        parts.push(v);
+      }
     }
   }
 

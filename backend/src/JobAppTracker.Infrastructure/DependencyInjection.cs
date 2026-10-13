@@ -40,6 +40,14 @@ namespace JobAppTracker.Infrastructure
                         options.User.RequireUniqueEmail = true;
                         options.SignIn.RequireConfirmedEmail = true;
 
+                        // One password rule everywhere (register, reset, change), matching what the
+                        // screens tell the user: at least 8 characters, letters and numbers.
+                        options.Password.RequiredLength = 8;
+                        options.Password.RequireDigit = true;
+                        options.Password.RequireLowercase = false;
+                        options.Password.RequireUppercase = false;
+                        options.Password.RequireNonAlphanumeric = false;
+
                         options.Lockout.AllowedForNewUsers = true;
                         options.Lockout.MaxFailedAccessAttempts = 5;
                         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);

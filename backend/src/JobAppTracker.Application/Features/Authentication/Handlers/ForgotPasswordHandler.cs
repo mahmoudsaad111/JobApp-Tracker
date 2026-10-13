@@ -17,19 +17,16 @@ namespace JobAppTracker.Application.Features.Authentication.Handlers
     {
         private readonly UserManager<User> _userManager;
         private readonly IEmailService _emailService;
-        private readonly ICurrentUserService _currentUserService;
         private readonly IFrontendUrlService _frontendUrlService;
 
         public ForgotPasswordHandler(
             UserManager<User> userManager,
             IEmailService emailService,
-            ICurrentUserService currentUserService,
             IFrontendUrlService frontendUrlService
         )
         {
             _userManager = userManager;
             _emailService = emailService;
-            _currentUserService = currentUserService;
             _frontendUrlService = frontendUrlService;
         }
 

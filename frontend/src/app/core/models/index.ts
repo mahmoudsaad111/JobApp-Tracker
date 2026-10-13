@@ -140,7 +140,7 @@ export interface JobApplication {
 export interface CreateApplicationRequest {
   CompanyName:     string;
   Title:           string;
-  Location:        string;
+  Location?:       string | null;   // optional
   Link?:           string;
   ApplicationDate: Date;
   Status:          ApplicationStatus;
@@ -153,11 +153,13 @@ export interface CreateApplicationRequest {
 export interface UpdateApplicationRequest {
   CompanyName:     string;
   Title:           string;
-  Location:        string;
+  Location?:       string | null;   // optional
   JobLink?:        string;
   ApplicationDate: Date;
   Status:          ApplicationStatus;
   Description?:    string;
+  Type?:           JobType;
+  WorkMode?:       WorkMode;
   RequiredSkills:  string[];
 }
 

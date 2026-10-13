@@ -98,9 +98,6 @@ import { APPLICATION_STATUSES, JOB_TYPES, WORK_MODES, JobType, WorkMode, ParsedJ
                 <mat-label>Location</mat-label>
                 <input matInput formControlName="Location" maxlength="255" placeholder="e.g. London, UK / Remote">
                 <mat-icon matPrefix>location_on</mat-icon>
-                @if (form.get('Location')?.hasError('required') && form.get('Location')?.touched) {
-                  <mat-error>Location is required</mat-error>
-                }
               </mat-form-field>
 
               <mat-form-field appearance="outline">
@@ -345,7 +342,7 @@ export class ApplicationFormComponent implements OnInit {
           this.form.patchValue({
             CompanyName:     a.companyName,
             Title:           a.title,
-            Location:        a.location,
+            Location:        a.location ?? '',
             Status:          a.status,
             ApplicationDate: new Date(a.appliedAt),
             Link:            a.jobLink     ?? '',
@@ -373,10 +370,12 @@ export class ApplicationFormComponent implements OnInit {
     const body   = {
       CompanyName:     raw.CompanyName,
       Title:           raw.Title,
-      Location:        raw.Location,
+      // Location is optional: send null (not an empty string) when it is blank.
+      Location:        raw.Location?.trim() ? raw.Location.trim() : null,
       Status:          raw.Status,
       ApplicationDate: raw.ApplicationDate as Date,
-      JobLink:         raw.Link,
+      Link:            raw.Link,   // create endpoint reads "Link"
+      JobLink:         raw.Link,   // update endpoint reads "JobLink"
       Type:            raw.Type,
       WorkMode:        raw.WorkMode,
       RequiredSkills:  skills,

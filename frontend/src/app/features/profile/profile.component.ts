@@ -298,6 +298,30 @@ import { DocumentsService, DocumentDto } from '../../core/services/document.serv
 
     /* States */
     .loading-row { display: flex; justify-content: center; padding: 32px; }
+
+    /* Mobile: one column. The avatar card must NOT stay sticky here, otherwise it
+       floats on top of the cards below while scrolling. */
+    @media (max-width: 768px) {
+      .profile-grid { grid-template-columns: 1fr; gap: 14px !important; }
+      .avatar-card {
+        position: static;
+        padding: 20px 16px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .big-avatar { width: 64px; height: 64px; font-size: 1.5rem; margin-bottom: 6px; }
+      .user-name  { font-size: 1.05rem; }
+      .user-email { word-break: break-all; margin-bottom: 10px; }
+      .avatar-card button { width: 100%; }
+      .right-col  { gap: 14px; min-width: 0; }
+      .form-card  { padding: 16px; }
+      .section-card { padding: 14px; }
+      .section-header { flex-direction: column; align-items: stretch; }
+      .section-header button { width: 100%; }
+      .nav-body { padding: 12px; gap: 12px; }
+      .form-actions { justify-content: stretch; }
+      .form-actions button { width: 100%; }
+    }
   `]
 })
 export class ProfileComponent implements OnInit {

@@ -168,9 +168,13 @@ export class ForgotPasswordComponent {
         this.view.set('sent');
         this._startCooldown(60);
       },
-      error: () => {
+      error: err => {
         this.loading.set(false);
-        this.errorMsg.set('Something went wrong. Please try again.');
+        this.errorMsg.set(
+          err?.status === 429
+            ? 'Too many requests. Please wait a few minutes before trying again.'
+            : 'Something went wrong. Please try again.'
+        );
       },
     });
   }
