@@ -46,9 +46,14 @@ namespace JobAppTracker.Application.Features.Authentication.Handlers
             );
 
             if (!result.Succeeded)
+            {
+                if (result.Errors.Any(e => e.Code == nameof(IdentityErrorDescriber.PasswordMismatch)))
+                    throw new BadRequestException("Your current password is incorrect.");
+
                 throw new BadRequestException(
-                    "Failed to change password. Please ensure the current password is correct and the new password meets the requirements."
+                    string.Join(" ", result.Errors.Select(e => e.Description))
                 );
+            }
 
             return true;
         }

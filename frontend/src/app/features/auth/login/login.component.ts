@@ -258,7 +258,14 @@ export class LoginComponent {
       },
       error: err => {
         this.loading = false;
-        this.errorMessage = apiErrorMessage(err, 'Invalid email or password.');
+        // Only a 401/400 means "wrong details". Show the true reason for everything else.
+        if (err.status === 429) {
+          this.errorMessage = 'Too many attempts. Please wait a minute and try again.';
+        } else if (err.status === 0 || err.status >= 500) {
+          this.errorMessage = 'Could not reach the server. Please try again in a moment.';
+        } else {
+          this.errorMessage = apiErrorMessage(err, 'Invalid email or password.');
+        }
         this.needsConfirmation = /confirm your email/i.test(this.errorMessage);
       },
       complete: () => { this.loading = false; }

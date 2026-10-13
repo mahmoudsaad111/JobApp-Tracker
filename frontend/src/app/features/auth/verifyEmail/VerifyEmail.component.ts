@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../core/services/auth.service';
+import { apiErrorMessage } from '../../../core/utils/api-error';
 
 @Component({
   selector: 'app-verify-email',
@@ -78,14 +79,12 @@ export class VerifyEmailComponent implements OnInit {
       this.errorMessage = 'Verification link is invalid or expired.';
       return;
     }
-    console.log(userId); 
-    
     this.auth.verifyEmail({userId,token}).subscribe({
       next: () => this.state = 'success',
       error: err => {
       
         this.state = 'error';
-        this.errorMessage = err.error?.message ?? 'Link is invalid or has expired.';
+        this.errorMessage = apiErrorMessage(err, 'Link is invalid or has expired.');
       }
     });
   }

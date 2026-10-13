@@ -17,10 +17,10 @@ namespace JobAppTracker.Application.Features.JobApp.Commands
         // Optional: when missing, the existing applied date is kept.
         public DateTime? ApplicationDate { get; set; }
         public JobAppStatus Status { get; set; }
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         public JobType Type {get; set; }
         public WorkMode WorkMode {get; set; }
-        public IEnumerable<string> RequiredSkills {get; set; }
+        public IEnumerable<string>? RequiredSkills {get; set; }
     }
 }

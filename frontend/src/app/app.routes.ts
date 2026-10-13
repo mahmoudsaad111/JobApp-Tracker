@@ -7,23 +7,27 @@ export const routes: Routes = [
   // ─── Auth (public) ────────────────────────────────────────────────────────
   {
     path: 'auth',
-    canActivate: [guestGuard],
+    // guestGuard is applied per page below: the email-confirmation and password-reset
+    // links must also work for a person who is already signed in.
     loadComponent: () =>
       import('./features/auth/auth-layout.component').then(m => m.AuthLayoutComponent),
     children: [
       {
         path: 'login',
+        canActivate: [guestGuard],
         loadComponent: () =>
           import('./features/auth/login/login.component').then(m => m.LoginComponent)
       },
       {
         path: 'register',
+        canActivate: [guestGuard],
         loadComponent: () =>
           import('./features/auth/register/register.component').then(m => m.RegisterComponent)
       },
       { path: '', redirectTo: 'login', pathMatch: 'full' },
       {
         path: 'forgot-password',
+        canActivate: [guestGuard],
         loadComponent: () =>
           import('./features/auth/forgotPassword/forgotPassword.component')
             .then(m => m.ForgotPasswordComponent),

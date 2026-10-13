@@ -54,12 +54,13 @@ JobTracker brings applications, interviews, notes, documents, dashboards, and AI
 
 The standalone extension lives in [`jobtracker-extension/`](jobtracker-extension/README.md).
 
-- Captures job title, company, location, description, and skills from job pages, with LinkedIn-aware extraction.
-- Opens as a persistent Chrome/Edge side panel.
-- Keeps the current capture while navigating within the same tab.
-- Uses the public JobTracker session without asking for credentials inside the extension.
-- Clicking **Save to applications** saves directly to the signed-in account; if signed out, it opens the public login page and preserves the completed form for the next save.
-- Also supports a local shortlist and JSON export.
+- Captures job title, company, location, description, and skills from job pages, with LinkedIn-aware extraction. Long descriptions are summarised to the requirements and responsibilities instead of being cut off.
+- Opens as a Chrome/Edge toolbar popup and reads the page once, only when you click it, so browsing stays fast.
+- Uses your JobTracker login on the website. The extension never asks for or stores a password.
+- Clicking **Save to applications** saves directly to the signed-in account; if signed out, it opens the login page and keeps your filled form (draft) for when you come back.
+- Optional **Auto-fill with AI** button when signed in.
+- Local shortlist with a **Save to account** button per job, a duplicate-link warning, and JSON export.
+- Jobs saved with the default status (*Saved, not applied yet*) appear in All Applications; set the status to **Submitted** to count them on the dashboard.
 
 ## Architecture
 
@@ -93,7 +94,7 @@ ASP.NET Core 10 API             │
 | AI | Gemini client integration for job parsing, resume matching, and cover-letter generation |
 | Files and email | PDF/OpenXML document handling, local file storage, MailKit SMTP integration |
 | Deployment | Docker Compose, multi-stage Docker builds, nginx frontend hosting and API proxying |
-| Extension | Chrome/Edge Manifest V3, content extraction, persistent side panel, session-aware save flow |
+| Extension | Chrome/Edge Manifest V3, toolbar popup, on-demand content extraction, session-aware save flow |
 
 ## Run the project locally
 

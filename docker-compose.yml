@@ -31,6 +31,9 @@ services:
       - Frontend__BaseUrl=http://localhost:4200
       # nginx sits in front of the API: trust X-Forwarded-For so rate limits are per real client
       - ForwardedHeaders__Enabled=true
+      # Local Docker runs over plain http://localhost, so the login cookie must not be HTTPS-only here
+      # (appsettings.json turns it on for the live https site).
+      - Auth__SecureCookie=false
       # ── External Services ──────────────────────────────────
       - Gemini__ApiKey=${Gemini__ApiKey}
     volumes:
