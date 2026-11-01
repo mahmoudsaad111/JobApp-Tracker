@@ -70,6 +70,8 @@ namespace JobAppTracker.Infrastructure
             // Adding the database context to the service collection and configuring it to use SQL Server with the connection string from the configuration
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("SQLServer"))
+                      .UseOpenIddict() // registers OpenIddict's tables (applications, tokens...) in this DbContext
+
             );
             services.Configure<EmailSettings>(configuration.GetSection("Email"));
 

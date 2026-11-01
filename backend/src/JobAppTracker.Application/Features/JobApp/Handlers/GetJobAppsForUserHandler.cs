@@ -53,6 +53,10 @@ namespace JobAppTracker.Application.Features.JobApp.Handlers
             {
                 result = result.Where(j => j.Status == request.Status);
             }
+            if (request.WorkMode != null)
+            {
+                 result = result.Where(j => j.WorkMode == request.WorkMode);
+            }
 
             if (request.FromDate.HasValue)
             {

@@ -29,6 +29,13 @@ services:
       - Email__Password=${EMAIL_PASSWORD}
       # ── Frontend ───────────────────────────────────────────
       - Frontend__BaseUrl=http://localhost:4200
+      # The externally visible MCP URL; keep this in sync with the URL clients connect to.
+      - Mcp__ResourceUrl=${MCP_RESOURCE_URL:-http://localhost:4200/mcp}
+      # Production uses persistent certificates from a read-only host directory. Development ignores these.
+      - Mcp__Certificates__Signing__Path=/run/secrets/mcp/signing.pfx
+      - Mcp__Certificates__Signing__Password=${MCP_SIGNING_CERT_PASSWORD:-}
+      - Mcp__Certificates__Encryption__Path=/run/secrets/mcp/encryption.pfx
+      - Mcp__Certificates__Encryption__Password=${MCP_ENCRYPTION_CERT_PASSWORD:-}
       # nginx sits in front of the API: trust X-Forwarded-For so rate limits are per real client
       - ForwardedHeaders__Enabled=true
       # Local Docker runs over plain http://localhost, so the login cookie must not be HTTPS-only here
@@ -38,6 +45,7 @@ services:
       - Gemini__ApiKey=${Gemini__ApiKey}
     volumes:
       - uploads-data:/app/App_Data/uploads
+      - "${MCP_CERTIFICATE_DIR:-./certificates}:/run/secrets/mcp:ro"
 
   mssql:
     image: mcr.microsoft.com/mssql/server:2022-latest

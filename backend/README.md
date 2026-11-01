@@ -20,6 +20,8 @@ Domain ──────────── Entities, enums, value objects, busi
     │
     ▼
 Infrastructure ──── EF Core, SQL Server, repositories, files, email, AI
+
+Mcp ─────────────── MCP tools (class library): sends the same MediatR requests as the controllers
 ```
 
 Dependencies point inward. The domain does not depend on ASP.NET Core, EF Core, SQL Server, MailKit, or Gemini. Infrastructure implements interfaces defined by the application layer, which keeps business workflows testable and provider-independent.
@@ -135,6 +137,115 @@ Current workflows:
 2. Compare a stored resume with an application and return matched/missing skills.
 3. Generate a tailored cover-letter draft from an application and document.
 
+## MCP server
+
+The API hosts an authenticated Streamable HTTP MCP server at `/mcp`, so AI assistants (Claude, MCP Inspector, other MCP clients) can work with a user's job search.
+
+### How it is built
+
+- **`JobAppTracker.Mcp`** is a small class library referenced by the API. Each tool is a method marked `[McpServerTool]` that only sends a MediatR command or query, so validation, ownership checks and business rules are the same as for the REST API. `McpMediatorExtensions.SendForMcpAsync` converts application and domain exceptions into `McpException`, so the model sees a clear error message while unexpected errors stay generic.
+- **No user id in tools.** The current user comes from the access token (`sub` claim, read by `CurrentUserService`). Global EF Core query filters then keep every query inside that user's data.
+- **Login server inside the API.** OpenIddict issues the tokens and stores clients, authorizations and tokens in the existing database (migration `AddOpenIddict`). The authorize endpoint reuses the website login: if there is no Identity cookie, the user is redirected to the Angular `/auth/login?returnUrl=...` page and returns to `/connect/authorize` after signing in.
+- **Token rules.** Authorization code flow with mandatory PKCE (S256) and refresh tokens; tokens are issued for the MCP URL only (resource indicator and audience check); the token contains only the user id. The token endpoint re-checks that the user still exists and is not locked out.
+- **Discovery.** Unauthenticated calls to `/mcp` answer `401` with a `WWW-Authenticate` header pointing to the protected-resource metadata, which is how Claude knows to start the browser login.
+
+### Endpoints
+
+| Path | Purpose |
+|---|---|
+| `/mcp` | MCP server (needs an access token) |
+| `/connect/authorize` | OAuth browser login (redirects to the Angular login) |
+| `/connect/token` | Exchanges the code or a refresh token for tokens |
+| `/.well-known/oauth-protected-resource` (and `/mcp` variant) | Says which login server protects `/mcp` |
+| `/.well-known/oauth-authorization-server` | Login server metadata |
+| `/.well-known/jwks` | Public keys that verify tokens |
+
+### Registered OAuth clients
+
+Clients are created or updated at every startup by `OAuthClientSeeder` (public clients, PKCE required, no secret).
+
+| Client ID | For | Redirect URIs |
+|---|---|---|
+| `jobapptracker-claude` | Claude (web, desktop, mobile) | `https://claude.ai/api/mcp/auth_callback` |
+| `jobapptracker-inspector` | MCP Inspector on a developer machine | `http://localhost:6274/oauth/callback` (and `/debug`, also `127.0.0.1`) |
+
+To support another AI client, add its redirect URI as a new client in `OAuthClientSeeder` and redeploy. Dynamic client registration is not implemented yet.
+
+### Tools
+
+The server exposes 22 tools:
+
+| Area | Tools |
+|---|---|
+| Applications | `list_applications`, `get_application`, `create_application`, `update_application`, `update_application_status` |
+| Interviews | `list_interviews`, `get_interview`, `create_interview`, `update_interview`, `delete_interview` |
+| Notes | `list_notes`, `get_note`, `create_note`, `update_note`, `delete_note` |
+| Documents | `list_documents`, `get_document_text` |
+| Dashboard | `get_dashboard_summary` |
+| AI | `parse_job_posting`, `match_resume_to_application`, `generate_cover_letter` |
+
+Tool hints (`ReadOnly`, `Destructive`, `OpenWorld`) are set so clients can ask for confirmation on risky calls.
+
+### Safety decisions
+
+- No tool deletes applications or documents, and there is no document upload or download; `list_documents` never returns server file paths.
+- List tools return at most 50 items plus `total` and `returned`; `get_document_text` returns at most 20,000 characters and an `isTruncated` flag.
+- Job descriptions, notes and documents are user-provided text and can contain prompt-injection attempts. Tool descriptions say to treat them as data, and the destructive surface is deliberately small (only interview and note deletion remain).
+- The three AI tools send text to the configured Gemini provider and use the project's API quota. Registration is open, so keep an eye on usage (a per-user daily limit is a sensible next step).
+
+### Configuration
+
+`Mcp:ResourceUrl` (environment variable `Mcp__ResourceUrl`) must exactly match the public MCP URL, including `/mcp`; for example `https://jobs.example.com/mcp`. The login server address (issuer) and all OAuth endpoint URLs are derived from it. `appsettings.json` holds the production value; Docker Compose overrides it with `MCP_RESOURCE_URL` (default `http://localhost:4200/mcp`).
+
+### Local testing with Docker
+
+1. Copy `.env.example` to `.env` and keep `ASPNETCORE_ENVIRONMENT=Development` (this uses OpenIddict development certificates and allows plain http).
+2. `docker compose up --build`, register and confirm an account at `http://localhost:4200`.
+3. Open MCP Inspector, choose *Streamable HTTP*, URL `http://localhost:4200/mcp`, and in OAuth settings use client ID `jobapptracker-inspector`. If the login redirects to a wrong address, clear Inspector's saved OAuth state and retry.
+
+Running with plain `dotnet run` is possible, but the browser login redirect goes to the API host, not the Angular dev server, so Docker (nginx in front of both) is the supported local path.
+
+### Production certificates
+
+Development uses OpenIddict development certificates. Production needs two persistent PFX files with private keys (one for signing, one for encryption). They must stay the same across restarts and deploys; replacing them invalidates all issued tokens and users must reconnect. Create them once (PowerShell, use your own strong passwords):
+
+```powershell
+$sign = New-SelfSignedCertificate -Subject "CN=JobTracker MCP Signing" -KeySpec Signature -KeyExportPolicy Exportable -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(5)
+$enc  = New-SelfSignedCertificate -Subject "CN=JobTracker MCP Encryption" -KeyUsage KeyEncipherment -KeyExportPolicy Exportable -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(5)
+Export-PfxCertificate -Cert $sign -FilePath mcp-signing.pfx -Password (Read-Host -AsSecureString "Signing password")
+Export-PfxCertificate -Cert $enc  -FilePath mcp-encryption.pfx -Password (Read-Host -AsSecureString "Encryption password")
+```
+
+**Shared hosting (MonsterASP, the live site):** upload both files to `App_Data/mcp-certs/` on the server, then create a server-only `appsettings.Production.json` next to `appsettings.json` (it is git-ignored and survives deploys because the workflow does not delete server-only files):
+
+```json
+{
+  "Mcp": {
+    "Certificates": {
+      "Signing": { "Path": "App_Data/mcp-certs/mcp-signing.pfx", "Password": "..." },
+      "Encryption": { "Path": "App_Data/mcp-certs/mcp-encryption.pfx", "Password": "..." }
+    }
+  }
+}
+```
+
+Relative paths are resolved from the application folder. The app refuses to start in Production if a certificate path is missing or the file has no private key. Do not commit PFX files, passwords or this settings file.
+
+**Docker in Production mode:** put `signing.pfx` and `encryption.pfx` in `MCP_CERTIFICATE_DIR`; they are mounted read-only at `/run/secrets/mcp`, and the passwords come from `MCP_SIGNING_CERT_PASSWORD` and `MCP_ENCRYPTION_CERT_PASSWORD`. The same settings can be given as environment variables:
+
+| Environment variable | Purpose |
+|---|---|
+| `Mcp__Certificates__Signing__Path` | Path to the OAuth token signing PFX inside the API container |
+| `Mcp__Certificates__Signing__Password` | Password for the signing PFX |
+| `Mcp__Certificates__Encryption__Path` | Path to the OAuth token encryption PFX inside the API container |
+| `Mcp__Certificates__Encryption__Password` | Password for the encryption PFX |
+
+Rotating either certificate invalidates tokens encrypted or signed with the previous key.
+
+### Deploying
+
+The GitHub Actions workflow *Deploy to Monster Hosting* is started manually (Actions, Run workflow). It runs the tests, builds the API and Angular app, and syncs the result without deleting server-only files. EF Core migrations (including `AddOpenIddict`) are applied automatically at startup. After a deploy, check that `https://<your-domain>/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server` return JSON and that `https://<your-domain>/mcp` answers `401` without a token, then connect the client.
+
 ## API areas
 
 | Route | Responsibility |
@@ -172,6 +283,11 @@ Important keys include:
 - `Email:SmtpServer`, `Email:Port`, `Email:SenderEmail`, `Email:PASSWORD`
 - `Gemini:ApiKey`, `Gemini:Model`, `Gemini:BaseUrl`
 - `Auth:AbsoluteSessionDays`, `Auth:SlidingSessionExpireHours`, `Auth:SecureCookie`, `Auth:SameSite`
+- `Mcp:ResourceUrl`
+- `Mcp:Certificates:Signing:Path`, `Mcp:Certificates:Signing:Password`
+- `Mcp:Certificates:Encryption:Path`, `Mcp:Certificates:Encryption:Password`
+
+The certificate keys are only read outside Development.
 
 Example from the `backend` directory:
 
@@ -242,7 +358,8 @@ backend/
 │   ├── JobAppTracker.API/
 │   ├── JobAppTracker.Application/
 │   ├── JobAppTracker.Domain/
-│   └── JobAppTracker.Infrastructure/
+│   ├── JobAppTracker.Infrastructure/
+│   └── JobAppTracker.Mcp/
 ├── tests/
 │   ├── JobAppTracker.Application.UnitTests/
 │   ├── JobAppTracker.Domain.UnitTests/

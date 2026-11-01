@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -218,6 +218,7 @@ export class LoginComponent {
   private auth   = inject(AuthService);
   private notify = inject(NotificationService);
   private router = inject(Router);
+  private route  = inject(ActivatedRoute);
 
   form = inject(FormBuilder).nonNullable.group({
     email:    ['', [Validators.required, Validators.email]],
@@ -254,6 +255,16 @@ export class LoginComponent {
     this.auth.login(this.form.getRawValue()).subscribe({
       next: () => {
         this.notify.success('Welcome back!');
+
+        // Claude (OAuth) sent the user here: go back to the server's authorize URL with a full page
+        // load, because it is an API endpoint, not an Angular route. Only our own authorize path is
+        // allowed, so this can never redirect to another site.
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        if (returnUrl && returnUrl.startsWith('/connect/authorize')) {
+          window.location.href = returnUrl;
+          return;
+        }
+
         this.router.navigate(['/dashboard']);
       },
       error: err => {
