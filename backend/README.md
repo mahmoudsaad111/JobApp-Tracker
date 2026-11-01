@@ -210,7 +210,7 @@ Running with plain `dotnet run` is possible, but the browser login redirect goes
 Development uses OpenIddict development certificates. Production needs two persistent PFX files with private keys (one for signing, one for encryption). They must stay the same across restarts and deploys; replacing them invalidates all issued tokens and users must reconnect. Create them once (PowerShell, use your own strong passwords):
 
 ```powershell
-$sign = New-SelfSignedCertificate -Subject "CN=JobTracker MCP Signing" -KeySpec Signature -KeyExportPolicy Exportable -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(5)
+$sign = New-SelfSignedCertificate -Subject "CN=JobTracker MCP Signing" -KeyExportPolicy Exportable -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(5)
 $enc  = New-SelfSignedCertificate -Subject "CN=JobTracker MCP Encryption" -KeyUsage KeyEncipherment -KeyExportPolicy Exportable -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(5)
 Export-PfxCertificate -Cert $sign -FilePath mcp-signing.pfx -Password (Read-Host -AsSecureString "Signing password")
 Export-PfxCertificate -Cert $enc  -FilePath mcp-encryption.pfx -Password (Read-Host -AsSecureString "Encryption password")

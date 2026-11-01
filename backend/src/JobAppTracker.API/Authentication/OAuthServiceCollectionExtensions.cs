@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using JobAppTracker.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
@@ -89,6 +90,36 @@ public static class OAuthServiceCollectionExtensions
         return services;
     }
 
+    // Windows hosts (IIS) differ in how a PFX private key may be stored, so try the safest mode first.
+    // 1) Ephemeral = key stays in memory only. 2) User store. 3) Machine store.
+    private static X509Certificate2 LoadPfx(string fullPath, string? password, string purpose)
+    {
+        X509KeyStorageFlags[] attempts =
+        [
+            X509KeyStorageFlags.EphemeralKeySet,
+            X509KeyStorageFlags.UserKeySet,
+            X509KeyStorageFlags.MachineKeySet,
+        ];
+
+        CryptographicException? lastError = null;
+        foreach (var flags in attempts)
+        {
+            try
+            {
+                return X509CertificateLoader.LoadPkcs12FromFile(fullPath, password, flags);
+            }
+            catch (CryptographicException ex)
+            {
+                lastError = ex;
+            }
+        }
+
+        throw new InvalidOperationException(
+            $"Could not load the MCP {purpose.ToLowerInvariant()} certificate '{fullPath}'. Check that the file and its password are correct.",
+            lastError
+        );
+    }
+
     private static X509Certificate2 LoadCertificate(
         IWebHostEnvironment environment,
         IConfiguration configuration,
@@ -107,11 +138,7 @@ public static class OAuthServiceCollectionExtensions
         // A relative path (for example App_Data/mcp-certs/mcp-signing.pfx) is resolved from the app folder.
         var fullPath = Path.IsPathRooted(path) ? path : Path.Combine(environment.ContentRootPath, path);
 
-        var certificate = X509CertificateLoader.LoadPkcs12FromFile(
-            fullPath,
-            section["Password"],
-            X509KeyStorageFlags.EphemeralKeySet
-        );
+        var certificate = LoadPfx(fullPath, section["Password"], purpose);
         if (!certificate.HasPrivateKey)
         {
             certificate.Dispose();
