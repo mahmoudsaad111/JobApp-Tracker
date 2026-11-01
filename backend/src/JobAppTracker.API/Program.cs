@@ -1,10 +1,16 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading.RateLimiting;
+using JobAppTracker.API.Authentication;
 using JobAppTracker.API.Middlewares;
 using JobAppTracker.Application;
 using JobAppTracker.Domain.Entities;
 using JobAppTracker.Infrastructure;
 using JobAppTracker.Infrastructure.Data;
+using JobAppTracker.Mcp;
+using OpenIddict.Validation.AspNetCore;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
@@ -21,8 +27,27 @@ builder
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); // ← teaches JSON serializer to convert enums to/from strings
     });
-;
+
+// OAuth login server used by MCP clients (Claude). See OAuthServiceCollectionExtensions.
+builder.Services.AddMcpOAuth(builder.Environment, builder.Configuration);
+
 builder.Services.AddAuthorization();
+
+
+// MCP uses its own serializer options so enums travel as names ("Interviewed"), not numbers.
+var mcpJsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web)
+{
+    TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
+};
+mcpJsonOptions.Converters.Add(new JsonStringEnumConverter());
+
+// Add MCP server and tools
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithToolsFromAssembly(typeof(McpAssemblyMarker).Assembly, mcpJsonOptions);
+
+// /mcp is protected by OAuth access tokens (see AddMcpOAuth). The Identity cookie stays the default for the website.
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -134,6 +159,15 @@ app.UseAuthorization();
 app.UseRateLimiter(); 
 
 app.MapControllers();
+
+// The MCP endpoint: only requests with a valid OAuth access token (issued for this MCP URL) get through.
+app.MapMcp("/mcp").RequireAuthorization(policy => policy
+    .AddAuthenticationSchemes(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)
+    .RequireAuthenticatedUser());
+
+// Tells Claude which login server protects /mcp.
+app.MapMcpOAuthMetadata();
+// Fallback to index.html for Angular routing
 app.MapFallbackToFile("index.html");
 
 using (var scope = app.Services.CreateScope())

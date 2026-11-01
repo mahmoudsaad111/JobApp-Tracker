@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text;
@@ -16,13 +16,14 @@ namespace JobAppTracker.Infrastructure.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public Guid UserId =>
-            Guid.Parse(
-                _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            );
-        public Guid? UserIdOrNull =>
-    Guid.TryParse(
-        _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value,
-        out var id) ? id : null;
+        // The website's login cookie stores the user id as NameIdentifier; OAuth access tokens (used by /mcp)
+        // store it as "sub". Both are the same user id.
+        private string? UserIdValue =>
+            _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? _httpContextAccessor.HttpContext?.User?.FindFirst("sub")?.Value;
+
+        public Guid UserId => Guid.Parse(UserIdValue!);
+
+        public Guid? UserIdOrNull => Guid.TryParse(UserIdValue, out var id) ? id : null;
     }
 }

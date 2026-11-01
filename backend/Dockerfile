@@ -10,6 +10,8 @@ COPY src/JobAppTracker.API/JobAppTracker.API.csproj                         src/
 COPY src/JobAppTracker.Domain/JobAppTracker.Domain.csproj                   src/JobAppTracker.Domain/
 COPY src/JobAppTracker.Application/JobAppTracker.Application.csproj         src/JobAppTracker.Application/
 COPY src/JobAppTracker.Infrastructure/JobAppTracker.Infrastructure.csproj   src/JobAppTracker.Infrastructure/
+COPY src/JobAppTracker.Mcp/JobAppTracker.Mcp.csproj                         src/JobAppTracker.Mcp/
+
 RUN dotnet restore src/JobAppTracker.API/JobAppTracker.API.csproj
 COPY . .
 RUN dotnet build src/JobAppTracker.API/JobAppTracker.API.csproj  -c Release --no-restore -o /app/build

@@ -62,6 +62,21 @@ The standalone extension lives in [`jobtracker-extension/`](jobtracker-extension
 - Local shortlist with a **Save to account** button per job, a duplicate-link warning, and JSON export.
 - Jobs saved with the default status (*Saved, not applied yet*) appear in All Applications; set the status to **Submitted** to count them on the dashboard.
 
+### MCP server
+
+JobTracker is also a [Model Context Protocol](https://modelcontextprotocol.io) server. Connect an AI assistant such as Claude and manage your job search in plain language: *"What interviews do I have this week?"*, *"Add this role to my applications"*, *"Match my CV against the Backend Engineer application"*.
+
+- **Endpoint:** `/mcp` (Streamable HTTP), hosted inside the existing API, with no separate service to run.
+- **Login like any connector:** the client opens a browser, you sign in with your normal JobTracker account, and the assistant receives a token for your data only. Sign-in uses OAuth 2.1 with mandatory PKCE, powered by OpenIddict.
+- **22 tools:** applications, interviews, notes, documents (read-only), dashboard summary, and three AI workflows (parse a job posting, match a resume, generate a cover letter).
+- **Safe by design:** tools never take a user id, so every call is scoped to the signed-in user; there are no tools that delete applications or documents, upload or download files; list results are capped; document text is size-limited and flagged as data, not instructions.
+
+**Connect Claude:** Settings, Connectors, *Add custom connector*, URL `https://jobapptracker.tryasp.net/mcp`, then under advanced settings set the OAuth client ID to `jobapptracker-claude` (leave the secret empty). Your browser opens the JobTracker login; after signing in, the connector is ready.
+
+**Try it locally:** with Docker Compose running, point an MCP client (for example [MCP Inspector](https://github.com/modelcontextprotocol/inspector), transport *Streamable HTTP*, client ID `jobapptracker-inspector`) at `http://localhost:4200/mcp`.
+
+Full details (architecture, tool list, endpoints, certificates, deployment, security notes) are in [backend MCP setup](backend/README.md#mcp-server). Do not commit certificate files or passwords.
+
 ## Architecture
 
 ```text
@@ -77,6 +92,7 @@ ASP.NET Core 10 API             │
         ├── Application         │ CQRS, MediatR, validation
         ├── Domain              │ entities, enums, business rules
         ├── Infrastructure      │ EF Core, SQL Server, files, email, AI
+        ├── Mcp                 │ MCP tools served at /mcp (OAuth-protected)
         └── Integration tests   │ API workflow coverage
                 │
                 ▼
@@ -92,6 +108,7 @@ ASP.NET Core 10 API             │
 | Data | Entity Framework Core 10, SQL Server, migrations, repository abstractions |
 | Identity | ASP.NET Identity with secure cookie-based sessions, email confirmation, password recovery, and account lockout support |
 | AI | Gemini client integration for job parsing, resume matching, and cover-letter generation |
+| MCP and OAuth | Model Context Protocol C# SDK (Streamable HTTP), OpenIddict (OAuth 2.1 authorization code + PKCE) |
 | Files and email | PDF/OpenXML document handling, local file storage, MailKit SMTP integration |
 | Deployment | Docker Compose, multi-stage Docker builds, nginx frontend hosting and API proxying |
 | Extension | Chrome/Edge Manifest V3, toolbar popup, on-demand content extraction, session-aware save flow |
@@ -147,7 +164,10 @@ Copy `.env.example` to `.env` for Docker usage. Never commit real secrets.
 | `DB_PASSWORD` | SQL Server administrator password used by Docker Compose |
 | `EMAIL_PASSWORD` | SMTP application password for confirmation/reset emails |
 | `Gemini__ApiKey` | Optional Gemini API key for AI features |
-| `ASPNETCORE_ENVIRONMENT` | Runtime environment, usually `Development` or `Production` |
+| `ASPNETCORE_ENVIRONMENT` | Runtime environment, usually `Development` or `Production` (use `Development` for local Docker so OAuth uses development certificates) |
+| `MCP_RESOURCE_URL` | Public URL of the MCP endpoint, for example `http://localhost:4200/mcp` locally or `https://your-domain/mcp` in production |
+| `MCP_CERTIFICATE_DIR` | Folder with `signing.pfx` and `encryption.pfx`, only needed when running Docker in Production mode |
+| `MCP_SIGNING_CERT_PASSWORD`, `MCP_ENCRYPTION_CERT_PASSWORD` | Passwords of those two certificates |
 
 For local .NET development, use user secrets or environment variables for database, SMTP, and AI credentials.
 
@@ -181,6 +201,9 @@ The API is organized around the same product areas exposed by the UI:
 - `/api/job-postings/parse` — AI-assisted job-posting parsing
 - `/api/job-applications/{id}/match` — resume matching
 - `/api/job-applications/{id}/cover-letter` — cover-letter generation
+- `/mcp` — MCP server (OAuth access token required)
+- `/connect/authorize`, `/connect/token` — OAuth login and token endpoints for MCP clients
+- `/.well-known/oauth-protected-resource`, `/.well-known/oauth-authorization-server`, `/.well-known/jwks` — OAuth discovery metadata
 
 ## Screenshots
 
@@ -205,7 +228,8 @@ The API is organized around the same product areas exposed by the UI:
 │   │   ├── JobAppTracker.API/
 │   │   ├── JobAppTracker.Application/
 │   │   ├── JobAppTracker.Domain/
-│   │   └── JobAppTracker.Infrastructure/
+│   │   ├── JobAppTracker.Infrastructure/
+│   │   └── JobAppTracker.Mcp/
 │   └── tests/
 ├── frontend/
 ├── jobtracker-extension/
